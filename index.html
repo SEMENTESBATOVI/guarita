@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#E36612">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>Guarita Batovi</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600;700&display=swap">
@@ -215,6 +217,10 @@ dialog::backdrop{background:rgba(15,18,12,.55)}
 #l-cod{font-family:var(--f-display);font-size:24px;letter-spacing:.12em;text-align:center;text-transform:uppercase}
 .who{font-size:12px;color:var(--muted);white-space:nowrap}
 .who button{border:0;background:none;color:var(--orange);font-weight:600;cursor:pointer;padding:0;font-size:12px;text-decoration:underline;text-underline-offset:2px}
+.logo{height:40px;width:auto;display:block;flex:none}
+.brand-txt{border-left:1px solid var(--line);padding-left:10px;min-width:0}
+.logo-login{height:64px;width:auto;display:block}
+@media (max-width:460px){.logo{height:32px}}
 .btn .spin{width:14px;height:14px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;display:inline-block}
 @media (prefers-reduced-motion:no-preference){.btn .spin{animation:rot .7s linear infinite}@keyframes rot{to{transform:rotate(360deg)}}}
 .card.busy{opacity:.6;pointer-events:none}
@@ -230,8 +236,8 @@ dialog::backdrop{background:rgba(15,18,12,.55)}
 
 <section class="wrap login" id="v-login" hidden>
   <form id="form-login" novalidate>
-    <div class="mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V10l9-6 9 6v11"/><path d="M3 14h18"/><path d="M8 14v7M16 14v7"/></svg></div>
-    <div><h2>Guarita Batovi</h2><p>Entrada e saída de veículos · Fazenda Batovi</p></div>
+    <img class="logo-login" src="logo-batovi.png" alt="Sementes Batovi" width="261" height="96">
+    <div><h2>Guarita</h2><p>Entrada e saída de veículos · Fazenda Batovi</p></div>
     <div class="field"><label for="l-nome">Seu nome</label><input id="l-nome" autocomplete="name" autocapitalize="characters" placeholder="Ex.: JOÃO (PORTARIA)" required></div>
     <div class="field"><label for="l-cod">Código de acesso</label><input id="l-cod" autocomplete="off" autocapitalize="characters" required><span class="hint" id="l-hint">Peça o código ao escritório.</span></div>
     <button class="btn primary" type="submit" id="l-btn">Entrar</button>
@@ -243,8 +249,8 @@ dialog::backdrop{background:rgba(15,18,12,.55)}
   <div class="wrap">
     <div class="top-row">
       <div class="brand">
-        <div class="mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V10l9-6 9 6v11"/><path d="M3 14h18"/><path d="M8 14v7M16 14v7"/></svg></div>
-        <div><h1>Guarita Batovi</h1><small>Entrada e saída de veículos · Fazenda Batovi</small></div>
+        <img class="logo" src="logo-batovi.png" alt="Sementes Batovi" width="261" height="96">
+        <div class="brand-txt"><h1>Guarita</h1><small>Entrada e saída de veículos · Fazenda Batovi</small></div>
       </div>
       <div class="top-right">
         <span class="who"><span id="who-nome"></span> · <button type="button" id="btn-sair">sair</button></span>
