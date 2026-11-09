@@ -225,6 +225,9 @@ dialog::backdrop{background:rgba(15,18,12,.55)}
 .fila span{display:inline-flex;align-items:baseline;gap:4px;font-size:13px;font-weight:600;border-radius:8px;padding:3px 9px;color:var(--ink);background:var(--sunk)}
 .fila b{font-family:var(--f-display);font-size:20px;line-height:1}
 .fila .fila-p{background:var(--orange-soft);color:var(--orange)}
+.card{position:relative}
+.card.has-fila{padding-bottom:24px}
+.fila-geral{position:absolute;right:12px;bottom:6px;font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.02em}
 .btn .spin{width:14px;height:14px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;display:inline-block}
 @media (prefers-reduced-motion:no-preference){.btn .spin{animation:rot .7s linear infinite}@keyframes rot{to{transform:rotate(360deg)}}}
 .card.busy{opacity:.6;pointer-events:none}
@@ -600,10 +603,10 @@ function renderPatio(){
   else if(!open.length) box.innerHTML=`<div class="empty"><strong>Pátio vazio</strong>Quando um caminhão chegar, toque em <b>+ Nova chegada</b> e registre a placa.</div>`;
   else box.innerHTML = open.map(d=>{
     const fl=issues(d); const fq=filaPos[d.id];
-    return `<article class="card${fl.length?" alert":""}${S.busy.has(d.id)?" busy":""}">
+    return `<article class="card${fl.length?" alert":""}${S.busy.has(d.id)?" busy":""}${fq?" has-fila":""}">
       <div class="c-top">${plate(d.placa)}<div class="c-who"><strong>${esc(d.motorista)}</strong><span>${esc(d.transportadora)}</span></div>${pill(d.status)}</div>
       <div class="c-fin">${esc(d.finalidade)}</div>
-      ${fq?`<div class="fila" title="Ordem de chegada entre os que aguardam entrada"><span class="fila-g"><b>${fq.g}º</b> geral</span><span class="fila-p"><b>${fq.p}º</b> de ${esc(fq.prod)}</span></div>`:""}
+      ${fq?`<div class="fila" title="Ordem de chegada de ${esc(fq.prod)} entre os que aguardam entrada"><span class="fila-p"><b>${fq.p}º</b> de ${esc(fq.prod)}</span></div>`:""}
       <div class="c-times">
         <div>Chegou<b>${d.chegada && startOfDay(d.chegada)!==startOfDay(now)?dm(d.chegada)+" ":""}${d.chegada?hm(d.chegada):"–"}</b></div>
         <div>Entrou<b>${d.entrada?hm(d.entrada):"–"}</b></div>
@@ -612,6 +615,7 @@ function renderPatio(){
       ${d.obs?`<div class="c-obs">${esc(d.obs)}</div>`:""}
       ${fl.length?`<div class="flags">${fl.map(f=>`<span class="flag">${esc(f)}</span>`).join("")}</div>`:""}
       <div class="acts">${cardActs(d)}</div>
+      ${fq?`<span class="fila-geral" title="Ordem de chegada entre todos que aguardam entrada">${fq.g}º geral</span>`:""}
     </article>`;
   }).join("");
   const aguard = open.filter(d=>d.status==="PATIO").length;
