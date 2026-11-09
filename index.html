@@ -327,11 +327,18 @@ dialog::backdrop{background:rgba(15,18,12,.55)}
 
   <section class="view" id="v-painel" hidden>
     <div class="sec-h"><h2>Painel da guarita</h2><span class="sub" id="painel-sub"></span></div>
+    <div class="filters">
+      <select class="selsm" id="p-prod" aria-label="Produto"><option value="">Todos os produtos</option></select>
+      <button class="chip" data-prange="hoje" aria-pressed="false">Hoje</button>
+      <button class="chip" data-prange="7" aria-pressed="false">7 dias</button>
+      <button class="chip" data-prange="mes" aria-pressed="true">Este mês</button>
+      <button class="chip" data-prange="mesant" aria-pressed="false">Mês passado</button>
+    </div>
     <div class="kpis" id="kpis"></div>
     <div class="panel" id="conferir"></div>
     <div class="grid2">
-      <div class="panel"><h3>Finalidades no mês</h3><div class="bars" id="b-fin"></div></div>
-      <div class="panel"><h3>Transportadoras no mês</h3><div class="bars" id="b-tr"></div></div>
+      <div class="panel"><h3 id="h-bprod">Produtos no período</h3><div class="bars" id="b-fin"></div></div>
+      <div class="panel"><h3>Transportadoras no período</h3><div class="bars" id="b-tr"></div></div>
     </div>
   </section>
 </main>
@@ -397,7 +404,7 @@ const fromLocalInput = v => { if(!v) return null; const x=Date.parse(v.slice(0,1
 const normPlaca = v => String(v||"").toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,7);
 const placaOk = p => /^[A-Z]{3}\d[A-Z0-9]\d{2}$/.test(p);
 const startOfDay = (t=Date.now()) => { const d=F(t); d.setUTCHours(0,0,0,0); return d.getTime()-TZOFF; };
-const startOfMonth = () => { const d=F(Date.now()); d.setUTCDate(1); d.setUTCHours(0,0,0,0); return d.getTime()-TZOFF; };
+const startOfMonth = (t=Date.now()) => { const d=F(t); d.setUTCDate(1); d.setUTCHours(0,0,0,0); return d.getTime()-TZOFF; };
 const isOpen = d => OPEN.has(d.status);
 const perm = d => (d.saida && d.chegada && d.saida>=d.chegada) ? d.saida-d.chegada : null;
 const sClass = s => "s-"+String(s||"OUTRO").replace(/ /g,"_");
@@ -626,29 +633,65 @@ function renderHist(){
 }
 function bars(map, cls){
   const arr=[...map.entries()].sort((a,b)=>b[1]-a[1]).slice(0,8);
-  if(!arr.length) return `<div class="count">Sem entradas no mês.</div>`;
+  if(!arr.length) return `<div class="count">Sem entradas no período.</div>`;
   const max=arr[0][1];
   return arr.map(([k,v])=>`<div class="bar ${cls||""}"><span class="lbl">${esc(k)}</span><span class="val">${v}</span><span class="trk"><i style="width:${Math.max(4,v/max*100)}%"></i></span></div>`).join("");
 }
+// Produto = finalidade sem "CARREGAR/DESCARREGAR"; soja e milho juntam os clientes (LDC, COFCO…)
+function produto(f){
+  let p=String(f||"").toUpperCase().trim().replace(/^(DES)?CARREG\w*\s+/,"").replace(/^ADUBO\s+/,"");
+  if(/^(SOJA|MILHO)\b/.test(p)) p=p.split(" ")[0];
+  if(/^CALC/.test(p)) p="CALCÁRIO";
+  return p||"—";
+}
+function tipoOp(f){ return isCarga(f)?"Carregamento":String(f||"").startsWith("DESCARREG")?"Descarga":"Outro"; }
+S.pRange = ls.get("guarita.prange")||"mes"; S.pProd = ls.get("guarita.pprod")||"";
+function periodo(){
+  const now=Date.now(), som=startOfMonth();
+  if(S.pRange==="hoje") return [startOfDay(), Infinity, "Hoje"];
+  if(S.pRange==="7") return [startOfDay(now-6*864e5), Infinity, "Últimos 7 dias"];
+  if(S.pRange==="mesant"){ const ini=startOfMonth(som-864e5); return [ini, som, "Mês passado"]; }
+  return [som, Infinity, "Este mês"];
+}
+function fillProdutos(){
+  const sel=$("#p-prod"); const cur=S.pProd;
+  const set=new Map();
+  (S.listas.finalidades||[]).concat(S.docs.map(d=>d.finalidade)).forEach(f=>{ if(!f) return; const p=produto(f); if(!set.has(p)) set.set(p,tipoOp(f)); });
+  const grp={Carregamento:[],Descarga:[],Outro:[]};
+  [...set.entries()].sort((a,b)=>a[0].localeCompare(b[0])).forEach(([p,t])=>grp[t].push(p));
+  let h=`<option value="">Todos os produtos</option>`;
+  for(const [g,l] of Object.entries(grp)) if(l.length) h+=`<optgroup label="${g==="Carregamento"?"Carregar":g==="Descarga"?"Descarregar":"Outros"}">`+l.map(p=>`<option value="${esc(p)}" ${p===cur?"selected":""}>${esc(p)}</option>`).join("")+`</optgroup>`;
+  sel.innerHTML=h; if(cur && ![...set.keys()].includes(cur)){ S.pProd=""; sel.value=""; }
+}
+$("#p-prod").addEventListener("change",e=>{ S.pProd=e.target.value; ls.set("guarita.pprod",S.pProd); renderPainel(); });
+document.querySelectorAll("[data-prange]").forEach(b=>b.addEventListener("click",()=>{ S.pRange=b.dataset.prange; ls.set("guarita.prange",S.pRange); renderPainel(); }));
 function renderPainel(){
-  const sod=startOfDay(), som=startOfMonth();
-  const open=S.docs.filter(isOpen), hoje=S.docs.filter(d=>(d.chegada||0)>=sod), mes=S.docs.filter(d=>(d.chegada||0)>=som);
-  const perms=mes.map(perm).filter(v=>v!=null);
+  fillProdutos();
+  document.querySelectorAll("[data-prange]").forEach(b=>b.setAttribute("aria-pressed", String(b.dataset.prange===S.pRange)));
+  const [ini,fim,rotulo]=periodo();
+  const base = S.pProd ? S.docs.filter(d=>produto(d.finalidade)===S.pProd) : S.docs;
+  const open=base.filter(isOpen);
+  const per=base.filter(d=>(d.chegada||0)>=ini && (d.chegada||0)<fim);
+  const sai=base.filter(d=>d.saida && d.saida>=ini && d.saida<fim);
+  const perms=sai.map(perm).filter(v=>v!=null);
   const media=perms.length?perms.reduce((a,b)=>a+b,0)/perms.length:null;
-  const carg=mes.filter(d=>isCarga(d.finalidade)).length, desc=mes.filter(d=>String(d.finalidade||"").startsWith("DESCARREG")).length;
-  $("#painel-sub").textContent = new Date().toLocaleDateString("pt-BR",{month:"long",year:"numeric"});
+  const carg=per.filter(d=>isCarga(d.finalidade)).length, desc=per.filter(d=>String(d.finalidade||"").startsWith("DESCARREG")).length;
+  const dentro=open.filter(d=>d.status==="CARREGANDO"||d.status==="DESCARREGANDO").length;
+  $("#painel-sub").textContent = (S.pProd?S.pProd+" · ":"") + rotulo;
   $("#kpis").innerHTML = `
-    <div class="kpi hl"><small>No pátio agora</small><b>${open.length}</b><span>${open.filter(d=>d.status==="PATIO").length} aguardando entrada</span></div>
-    <div class="kpi"><small>Entradas hoje</small><b>${hoje.length}</b><span>${dm(sod)}</span></div>
-    <div class="kpi"><small>Entradas no mês</small><b>${mes.length}</b><span>${carg} carregamentos · ${desc} descargas</span></div>
+    <div class="kpi hl"><small>No pátio agora</small><b>${open.length}</b><span>${open.filter(d=>d.status==="PATIO").length} aguardando · ${dentro} dentro</span></div>
+    <div class="kpi"><small>Entradas · ${esc(rotulo.toLowerCase())}</small><b>${per.length}</b><span>${carg} carregamentos · ${desc} descargas</span></div>
+    <div class="kpi"><small>Saídas · ${esc(rotulo.toLowerCase())}</small><b>${sai.length}</b><span>veículos liberados</span></div>
     <div class="kpi"><small>Permanência média</small><b>${dur(media)}</b><span>chegada → saída, ${perms.length} veículos</span></div>`;
-  const conf=S.docs.filter(d=>issues(d).length).sort((a,b)=>(b.chegada||0)-(a.chegada||0));
+  const conf=base.filter(d=>issues(d).length).sort((a,b)=>(b.chegada||0)-(a.chegada||0));
   $("#conferir").innerHTML = `<h3>Registros para conferir ${conf.length?`<span class="pill" style="background:var(--red-soft);color:var(--red)">${conf.length}</span>`:""}</h3>` +
     (conf.length ? `<div class="today-list">${conf.slice(0,30).map(d=>`<div class="trow" data-act="editar" data-id="${esc(d.id)}" tabindex="0">${plate(d.placa,true)}
-      <div class="t-main"><div><b>${esc(d.motorista)}</b> · chegou ${dmhm(d.chegada)}</div><small style="color:var(--red)">${esc(issues(d).join(" · "))}</small></div></div>`).join("")}</div>`
+      <div class="t-main"><div><b>${esc(d.motorista)}</b> · chegou ${dmhm(d.chegada)} · ${esc(produto(d.finalidade))}</div><small style="color:var(--red)">${esc(issues(d).join(" · "))}</small></div></div>`).join("")}</div>`
       : `<div class="count">Tudo certo: nenhum horário fora de ordem.</div>`);
   const fm=new Map(), tm=new Map();
-  mes.forEach(d=>{ fm.set(d.finalidade||"—",(fm.get(d.finalidade||"—")||0)+1); tm.set(d.transportadora||"—",(tm.get(d.transportadora||"—")||0)+1); });
+  const chave = d => S.pProd ? (d.finalidade||"—") : produto(d.finalidade);
+  per.forEach(d=>{ fm.set(chave(d),(fm.get(chave(d))||0)+1); tm.set(d.transportadora||"—",(tm.get(d.transportadora||"—")||0)+1); });
+  $("#h-bprod").textContent = S.pProd ? "Finalidades no período" : "Produtos no período";
   $("#b-fin").innerHTML=bars(fm); $("#b-tr").innerHTML=bars(tm,"g");
 }
 
