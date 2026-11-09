@@ -266,6 +266,7 @@ dialog::backdrop{background:rgba(15,18,12,.55)}
 
   <section class="view" id="v-patio">
     <div class="sec-h"><h2>No pátio agora</h2><span class="sub" id="patio-sub"></span><span class="sp"><button class="btn primary" data-go="nova">+ Nova chegada</button></span></div>
+    <div class="filters"><select class="selsm" id="pt-prod" aria-label="Filtrar por produto"><option value="">Todos os produtos</option></select></div>
     <div id="patio-cards" class="cards"></div>
     <div class="sec-h"><h2>Saíram hoje</h2><span class="sub" id="hoje-sub"></span></div>
     <div id="hoje-list"></div>
@@ -576,9 +577,12 @@ function cardActs(d){
 }
 function renderPatio(){
   const now=Date.now();
-  const open = S.docs.filter(isOpen).sort((a,b)=>(a.chegada||0)-(b.chegada||0));
+  if(typeof fillProdSel==="function") fillProdSel($("#pt-prod"), "ptProd");
+  const doProd = d => !S.ptProd || produto(d.finalidade)===S.ptProd;
+  const open = S.docs.filter(isOpen).filter(doProd).sort((a,b)=>(a.chegada||0)-(b.chegada||0));
   const box=$("#patio-cards");
   if(!S.loaded) box.innerHTML=`<div class="empty"><strong>Carregando o pátio…</strong>Lendo a planilha da guarita.</div>`;
+  else if(!open.length && S.ptProd) box.innerHTML=`<div class="empty"><strong>Nenhum caminhão de ${esc(S.ptProd)} no pátio</strong>Escolha <b>Todos os produtos</b> para ver os outros.</div>`;
   else if(!open.length) box.innerHTML=`<div class="empty"><strong>Pátio vazio</strong>Quando um caminhão chegar, toque em <b>+ Nova chegada</b> e registre a placa.</div>`;
   else box.innerHTML = open.map(d=>{
     const fl=issues(d);
@@ -596,9 +600,9 @@ function renderPatio(){
     </article>`;
   }).join("");
   const aguard = open.filter(d=>d.status==="PATIO").length;
-  $("#patio-sub").textContent = open.length ? `${open.length} veículo${open.length>1?"s":""} · ${aguard} aguardando entrada` : "";
+  $("#patio-sub").textContent = open.length ? `${open.length} veículo${open.length>1?"s":""}${S.ptProd?" de "+S.ptProd:""} · ${aguard} aguardando entrada` : "";
   const sod=startOfDay();
-  const saiu = S.docs.filter(d=>!isOpen(d) && d.saida && d.saida>=sod).sort((a,b)=>b.saida-a.saida);
+  const saiu = S.docs.filter(d=>!isOpen(d) && d.saida && d.saida>=sod).filter(doProd).sort((a,b)=>b.saida-a.saida);
   $("#hoje-sub").textContent = saiu.length ? `${saiu.length} saída${saiu.length>1?"s":""}` : "";
   $("#hoje-list").innerHTML = saiu.length ? `<div class="today-list">${saiu.map(d=>`
     <div class="trow" data-act="editar" data-id="${esc(d.id)}" tabindex="0">${plate(d.placa,true)}
@@ -653,16 +657,19 @@ function periodo(){
   if(S.pRange==="mesant"){ const ini=startOfMonth(som-864e5); return [ini, som, "Mês passado"]; }
   return [som, Infinity, "Este mês"];
 }
-function fillProdutos(){
-  const sel=$("#p-prod"); const cur=S.pProd;
+function fillProdutos(){ fillProdSel($("#p-prod"), "pProd"); }
+function fillProdSel(sel, key){
+  const cur=S[key];
   const set=new Map();
   (S.listas.finalidades||[]).concat(S.docs.map(d=>d.finalidade)).forEach(f=>{ if(!f) return; const p=produto(f); if(!set.has(p)) set.set(p,tipoOp(f)); });
   const grp={Carregamento:[],Descarga:[],Outro:[]};
   [...set.entries()].sort((a,b)=>a[0].localeCompare(b[0])).forEach(([p,t])=>grp[t].push(p));
   let h=`<option value="">Todos os produtos</option>`;
   for(const [g,l] of Object.entries(grp)) if(l.length) h+=`<optgroup label="${g==="Carregamento"?"Carregar":g==="Descarga"?"Descarregar":"Outros"}">`+l.map(p=>`<option value="${esc(p)}" ${p===cur?"selected":""}>${esc(p)}</option>`).join("")+`</optgroup>`;
-  sel.innerHTML=h; if(cur && ![...set.keys()].includes(cur)){ S.pProd=""; sel.value=""; }
+  sel.innerHTML=h; if(cur && ![...set.keys()].includes(cur)){ S[key]=""; sel.value=""; }
 }
+S.ptProd = ls.get("guarita.ptprod")||"";
+$("#pt-prod").addEventListener("change",e=>{ S.ptProd=e.target.value; ls.set("guarita.ptprod",S.ptProd); renderPatio(); });
 $("#p-prod").addEventListener("change",e=>{ S.pProd=e.target.value; ls.set("guarita.pprod",S.pProd); renderPainel(); });
 document.querySelectorAll("[data-prange]").forEach(b=>b.addEventListener("click",()=>{ S.pRange=b.dataset.prange; ls.set("guarita.prange",S.pRange); renderPainel(); }));
 function renderPainel(){
