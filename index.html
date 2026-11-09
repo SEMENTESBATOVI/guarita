@@ -1,0 +1,797 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#E36612">
+<title>Guarita Batovi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600;700&display=swap">
+<script>
+  // Link do App da Web da Planilha Google (termina em /exec). Troque aqui se reimplantar.
+  window.GUARITA_API = "https://script.google.com/macros/s/AKfycbyqHUqNz7NSeVkQp11kLS4JFpSsa18NBrL9Qg_nmNG0I9oNDUVzJqrDZBWWUMDkz1tEwA/exec";
+</script>
+<style>
+:root{color-scheme:light}
+html{-webkit-text-size-adjust:100%}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+[hidden]{display:none!important}
+/* Layout: cabeçalho fixo com contador do pátio → abas → uma coluna de cartões (pátio) ou tabela (histórico). Celular primeiro. */
+:root{
+  --bg:#F5F6F1; --surface:#FFFFFF; --sunk:#ECEEE6; --ink:#1D2317; --muted:#5D6555; --line:#D9DDCF;
+  --orange:#E36612; --orange-ink:#FFFFFF; --orange-soft:#FBE6D6;
+  --green:#5E8A2E; --green-soft:#E3EDD5;
+  --yellow:#FADA03; --yellow-soft:#FCF3B5; --yellow-ink:#4A3F00;
+  --blue:#2F6FB0; --blue-soft:#DCE8F5;
+  --red:#C2362B; --red-soft:#F8DEDB;
+  --plate-bg:#FFFFFF; --plate-ink:#111111; --plate-band:#003399; --plate-line:#B9BDB1;
+  --shadow:0 1px 2px rgba(29,35,23,.08),0 4px 14px rgba(29,35,23,.06);
+  --f-display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --f-body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#11140E; --surface:#1A1F16; --sunk:#151910; --ink:#ECEFE5; --muted:#A1A996; --line:#2C3326;
+  --orange:#F07A2B; --orange-ink:#1A0D02; --orange-soft:#3A2312;
+  --green:#8DBE58; --green-soft:#24331A;
+  --yellow:#FADA03; --yellow-soft:#3A3410; --yellow-ink:#FBE77A;
+  --blue:#6FA7DE; --blue-soft:#18283A;
+  --red:#EB6A5E; --red-soft:#3A1C19;
+  --plate-line:#4A5142; --shadow:0 1px 2px rgba(0,0,0,.4); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#11140E; --surface:#1A1F16; --sunk:#151910; --ink:#ECEFE5; --muted:#A1A996; --line:#2C3326;
+  --orange:#F07A2B; --orange-ink:#1A0D02; --orange-soft:#3A2312;
+  --green:#8DBE58; --green-soft:#24331A;
+  --yellow:#FADA03; --yellow-soft:#3A3410; --yellow-ink:#FBE77A;
+  --blue:#6FA7DE; --blue-soft:#18283A;
+  --red:#EB6A5E; --red-soft:#3A1C19;
+  --plate-line:#4A5142; --shadow:0 1px 2px rgba(0,0,0,.4); color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.45;margin:0}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--orange);outline-offset:2px}
+.wrap{max-width:980px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+/* Cabeçalho */
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
+.top-row{display:flex;align-items:center;gap:12px;padding-block:10px}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.mark{width:34px;height:34px;border-radius:8px;background:var(--orange);display:grid;place-items:center;flex:none}
+.mark svg{width:20px;height:20px}
+.brand h1{font-family:var(--f-display);font-weight:700;font-size:22px;letter-spacing:.01em;margin:0;line-height:1}
+.brand small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+.top-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.clock{font-family:var(--f-display);font-size:22px;font-weight:600;font-variant-numeric:tabular-nums}
+.conn{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--muted);white-space:nowrap}
+.conn i{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.conn.live i{background:var(--green);box-shadow:0 0 0 3px var(--green-soft)}
+.conn.bad i{background:var(--red)}
+nav.tabs{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;padding-bottom:8px}
+nav.tabs::-webkit-scrollbar{display:none}
+.tab{border:0;background:transparent;padding:8px 12px;border-radius:999px;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap;display:inline-flex;gap:6px;align-items:center}
+.tab[aria-selected="true"]{background:var(--ink);color:var(--bg)}
+.tab .n{font-family:var(--f-display);font-size:14px;background:var(--yellow);color:#3A3200;border-radius:999px;padding:0 7px;line-height:20px}
+
+main{padding-block:16px 40px}
+.view{display:grid;gap:16px}
+.banner{border:1px solid var(--line);background:var(--sunk);border-radius:10px;padding:10px 12px;color:var(--muted);font-size:14px}
+.banner.warn{background:var(--yellow-soft);border-color:transparent;color:var(--yellow-ink)}
+.banner.err{background:var(--red-soft);border-color:transparent;color:var(--red)}
+.sec-h{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.sec-h h2{font-family:var(--f-display);font-weight:700;font-size:20px;margin:0;text-transform:uppercase;letter-spacing:.04em}
+.sec-h .sub{color:var(--muted);font-size:13px}
+.sec-h .sp{margin-left:auto}
+
+/* Placa Mercosul */
+.plate{display:inline-flex;flex-direction:column;border:1.5px solid var(--plate-line);border-radius:5px;background:var(--plate-bg);color:var(--plate-ink);overflow:hidden;line-height:1;flex:none}
+.plate b{display:block;background:var(--plate-band);color:#fff;font-size:7px;letter-spacing:.25em;text-align:center;padding:2px 0 1px;font-weight:700;font-family:var(--f-body)}
+.plate span{font-family:var(--f-display);font-weight:700;font-size:22px;letter-spacing:.06em;padding:3px 8px 4px}
+.plate.sm b{font-size:5px;padding:1px 0}
+.plate.sm span{font-size:15px;padding:2px 6px 3px}
+
+/* Pills de status */
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;padding:3px 8px;border-radius:999px;white-space:nowrap}
+.pill::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.s-PATIO{background:var(--yellow-soft);color:var(--yellow-ink)}
+.s-AGUARDANDO_NFE{background:var(--blue-soft);color:var(--blue)}
+.s-CARREGANDO,.s-DESCARREGANDO{background:var(--orange-soft);color:var(--orange)}
+.s-LIBERADO{background:var(--green-soft);color:var(--green)}
+.s-FOI_EMBORA,.s-DESISTIU,.s-SEM_ORDEM,.s-OUTRO{background:var(--sunk);color:var(--muted)}
+
+/* Cartões do pátio */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;display:grid;gap:10px;box-shadow:var(--shadow);min-width:0}
+.card.alert{border-color:var(--red)}
+.c-top{display:flex;align-items:flex-start;gap:12px}
+.c-who{min-width:0;flex:1}
+.c-who strong{display:block;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.c-who span{color:var(--muted);font-size:13px}
+.c-fin{font-weight:600;font-size:14px}
+.c-times{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.c-times b{display:block;font-family:var(--f-display);font-size:19px;color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums;line-height:1.1}
+.c-times .elapsed b{color:var(--orange)}
+.c-obs{font-size:13px;color:var(--muted);background:var(--sunk);border-radius:8px;padding:6px 8px}
+.flags{display:flex;flex-wrap:wrap;gap:6px}
+.flag{font-size:12px;font-weight:600;color:var(--red);background:var(--red-soft);border-radius:6px;padding:2px 7px}
+.acts{display:flex;gap:8px;flex-wrap:wrap}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:10px 14px;font-weight:600;cursor:pointer;min-height:44px;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--orange);border-color:var(--orange);color:var(--orange-ink)}
+.btn.go{background:var(--green);border-color:var(--green);color:#fff}
+:root[data-theme="dark"] .btn.go{color:#0E1508}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .btn.go{color:#0E1508}}
+.btn.ghost{border-color:transparent;background:transparent;color:var(--muted)}
+.btn.danger{color:var(--red);border-color:var(--red)}
+.btn.grow{flex:1}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+
+.empty{border:1.5px dashed var(--line);border-radius:12px;padding:28px 16px;text-align:center;color:var(--muted)}
+.empty strong{display:block;color:var(--ink);font-family:var(--f-display);font-size:20px;margin-bottom:4px}
+
+.today-list{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.trow{display:flex;align-items:center;gap:10px;padding:10px 12px;border-top:1px solid var(--line);cursor:pointer;min-width:0}
+.trow:first-child{border-top:0}
+.trow:hover{background:var(--sunk)}
+.trow .t-main{flex:1;min-width:0;font-size:14px}
+.trow .t-main div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.trow .t-main small{color:var(--muted)}
+.trow .t-perm{font-family:var(--f-display);font-size:18px;font-weight:600;font-variant-numeric:tabular-nums}
+
+/* Formulário */
+form.reg{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;display:grid;gap:14px;max-width:560px}
+.field{display:grid;gap:5px;min-width:0}
+.field label{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.field input,.field select,.field textarea{width:100%;border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:11px 12px;min-height:46px}
+.field textarea{min-height:64px;resize:vertical}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--orange);outline:none;box-shadow:0 0 0 3px var(--orange-soft)}
+.field .hint{font-size:13px;color:var(--muted)}
+.field .hint.bad{color:var(--red)}
+#f-placa{font-family:var(--f-display);font-weight:700;font-size:30px;letter-spacing:.12em;text-transform:uppercase;text-align:center;padding:6px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:460px){.row2{grid-template-columns:1fr}}
+.inline{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.linkbtn{border:0;background:none;color:var(--orange);font-weight:600;padding:0;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+
+/* Histórico */
+.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 12px;font-weight:600;font-size:14px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.search{flex:1;min-width:180px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:8px 14px}
+.selsm{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 10px;font-weight:600;font-size:14px}
+.tablebox{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:12px}
+table{border-collapse:collapse;width:100%;font-size:14px;min-width:820px}
+th{text-align:left;font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:700;padding:10px;border-bottom:1px solid var(--line);background:var(--sunk);white-space:nowrap}
+td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:middle;white-space:nowrap}
+tbody tr{cursor:pointer}
+tbody tr:hover td{background:var(--sunk)}
+tbody tr:last-child td{border-bottom:0}
+td.num{font-variant-numeric:tabular-nums}
+td.perm{font-family:var(--f-display);font-size:16px;font-weight:600}
+td .warnico{color:var(--red);font-weight:700}
+.count{color:var(--muted);font-size:13px}
+
+/* Painel */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media (max-width:720px){.kpis{grid-template-columns:repeat(2,1fr)}}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.kpi small{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.kpi b{display:block;font-family:var(--f-display);font-size:36px;font-weight:700;line-height:1.05;font-variant-numeric:tabular-nums}
+.kpi span{font-size:12px;color:var(--muted)}
+.kpi.hl{background:var(--yellow);border-color:var(--yellow);color:#3A3200}
+.kpi.hl small,.kpi.hl span{color:#5A4E00}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:720px){.grid2{grid-template-columns:1fr}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;display:grid;gap:10px;min-width:0}
+.panel h3{margin:0;font-family:var(--f-display);font-size:17px;text-transform:uppercase;letter-spacing:.04em}
+.bars{display:grid;gap:8px}
+.bar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;font-size:13px}
+.bar .lbl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar .val{font-variant-numeric:tabular-nums;font-weight:700}
+.bar .trk{grid-column:1/-1;height:8px;background:var(--sunk);border-radius:4px;overflow:hidden}
+.bar .trk i{display:block;height:100%;background:var(--orange);border-radius:4px}
+.bar.g .trk i{background:var(--green)}
+
+/* Diálogo de edição */
+dialog{border:0;border-radius:16px;padding:0;background:var(--surface);color:var(--ink);width:min(560px,calc(100vw - 24px));max-height:calc(100vh - 32px);box-shadow:0 20px 60px rgba(0,0,0,.3)}
+dialog::backdrop{background:rgba(15,18,12,.55)}
+.dlg{padding:16px;display:grid;gap:12px}
+.dlg-h{display:flex;align-items:center;gap:10px}
+.dlg-h h3{margin:0;font-family:var(--f-display);font-size:20px;text-transform:uppercase}
+.dlg-h .x{margin-left:auto}
+.meta{font-size:12px;color:var(--muted)}
+
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:11px 16px;border-radius:10px;font-weight:600;font-size:14px;z-index:20;max-width:calc(100vw - 32px);box-shadow:var(--shadow)}
+.toast.bad{background:var(--red);color:#fff}
+@media (prefers-reduced-motion:no-preference){.toast{animation:up .18s ease-out}@keyframes up{from{transform:translate(-50%,8px);opacity:0}}}
+@media (max-width:460px){.clock{font-size:18px}.brand small{display:none}}
+/* Entrada (código de acesso) */
+.login{min-height:calc(100vh - 40px);display:grid;place-items:center;padding-block:24px}
+.login form{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:22px;display:grid;gap:14px;width:min(420px,100%);box-shadow:var(--shadow)}
+.login .mark{width:48px;height:48px;border-radius:12px}
+.login .mark svg{width:28px;height:28px}
+.login h2{font-family:var(--f-display);font-size:28px;margin:0;line-height:1}
+.login p{margin:0;color:var(--muted);font-size:14px}
+#l-cod{font-family:var(--f-display);font-size:24px;letter-spacing:.12em;text-align:center;text-transform:uppercase}
+.who{font-size:12px;color:var(--muted);white-space:nowrap}
+.who button{border:0;background:none;color:var(--orange);font-weight:600;cursor:pointer;padding:0;font-size:12px;text-decoration:underline;text-underline-offset:2px}
+.btn .spin{width:14px;height:14px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;display:inline-block}
+@media (prefers-reduced-motion:no-preference){.btn .spin{animation:rot .7s linear infinite}@keyframes rot{to{transform:rotate(360deg)}}}
+.card.busy{opacity:.6;pointer-events:none}
+@media (max-width:460px){.who{display:none}}
+.c-top{flex-wrap:wrap}
+.c-top .pill{margin-left:auto}
+.c-top .c-who{flex:1 1 150px}
+.acts .btn{padding:10px 12px}
+@media (max-width:460px){.acts .btn.ghost{flex:1}}
+</style>
+</head>
+<body>
+
+<section class="wrap login" id="v-login" hidden>
+  <form id="form-login" novalidate>
+    <div class="mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V10l9-6 9 6v11"/><path d="M3 14h18"/><path d="M8 14v7M16 14v7"/></svg></div>
+    <div><h2>Guarita Batovi</h2><p>Entrada e saída de veículos · Fazenda Batovi</p></div>
+    <div class="field"><label for="l-nome">Seu nome</label><input id="l-nome" autocomplete="name" autocapitalize="characters" placeholder="Ex.: JOÃO (PORTARIA)" required></div>
+    <div class="field"><label for="l-cod">Código de acesso</label><input id="l-cod" autocomplete="off" autocapitalize="characters" required><span class="hint" id="l-hint">Peça o código ao escritório.</span></div>
+    <button class="btn primary" type="submit" id="l-btn">Entrar</button>
+  </form>
+</section>
+
+<div id="app" hidden>
+<header class="top">
+  <div class="wrap">
+    <div class="top-row">
+      <div class="brand">
+        <div class="mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V10l9-6 9 6v11"/><path d="M3 14h18"/><path d="M8 14v7M16 14v7"/></svg></div>
+        <div><h1>Guarita Batovi</h1><small>Entrada e saída de veículos · Fazenda Batovi</small></div>
+      </div>
+      <div class="top-right">
+        <span class="who"><span id="who-nome"></span> · <button type="button" id="btn-sair">sair</button></span>
+        <span class="conn" id="conn"><i></i><span>Conectando</span></span>
+        <span class="clock" id="clock">--:--</span>
+      </div>
+    </div>
+    <nav class="tabs" role="tablist" aria-label="Seções">
+      <button class="tab" role="tab" data-tab="patio" aria-selected="true">Pátio <span class="n" id="n-patio">0</span></button>
+      <button class="tab" role="tab" data-tab="nova" aria-selected="false">+ Nova chegada</button>
+      <button class="tab" role="tab" data-tab="hist" aria-selected="false">Histórico</button>
+      <button class="tab" role="tab" data-tab="painel" aria-selected="false">Painel</button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div id="banner"></div>
+
+  <section class="view" id="v-patio">
+    <div class="sec-h"><h2>No pátio agora</h2><span class="sub" id="patio-sub"></span><span class="sp"><button class="btn primary" data-go="nova">+ Nova chegada</button></span></div>
+    <div id="patio-cards" class="cards"></div>
+    <div class="sec-h"><h2>Saíram hoje</h2><span class="sub" id="hoje-sub"></span></div>
+    <div id="hoje-list"></div>
+  </section>
+
+  <section class="view" id="v-nova" hidden>
+    <div class="sec-h"><h2>Registrar chegada</h2><span class="sub">Preencha na portaria. A hora entra sozinha.</span></div>
+    <form class="reg" id="form-nova" novalidate>
+      <div class="field">
+        <label for="f-placa">Placa</label>
+        <input id="f-placa" autocomplete="off" autocapitalize="characters" maxlength="8" placeholder="ABC1D23" required>
+        <span class="hint" id="h-placa">Mercosul (ABC1D23) ou antiga (ABC1234).</span>
+      </div>
+      <div class="field">
+        <label for="f-mot">Motorista</label>
+        <input id="f-mot" autocomplete="off" autocapitalize="characters" required>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label for="f-transp">Transportadora</label>
+          <input id="f-transp" list="dl-transp" autocomplete="off" autocapitalize="characters" required>
+          <datalist id="dl-transp"></datalist>
+        </div>
+        <div class="field">
+          <label for="f-fin">Finalidade</label>
+          <select id="f-fin" required></select>
+        </div>
+      </div>
+      <div class="field">
+        <label for="f-obs">Observação (opcional)</label>
+        <textarea id="f-obs" placeholder="Pedido, NF, nº da ordem…"></textarea>
+      </div>
+      <div class="field">
+        <label for="f-cheg">Chegada</label>
+        <div class="inline"><span id="cheg-txt">Agora</span><button type="button" class="linkbtn" id="cheg-adj">Ajustar horário</button></div>
+        <input id="f-cheg" type="datetime-local" hidden>
+      </div>
+      <div class="banner warn" id="dup" hidden></div>
+      <div class="acts"><button class="btn primary grow" type="submit" id="btn-reg">Registrar chegada</button></div>
+    </form>
+  </section>
+
+  <section class="view" id="v-hist" hidden>
+    <div class="sec-h"><h2>Histórico</h2><span class="count" id="hist-count"></span><span class="sp"><button class="btn" id="btn-csv">Baixar para Excel (CSV)</button></span></div>
+    <div class="filters">
+      <button class="chip" data-range="hoje" aria-pressed="false">Hoje</button>
+      <button class="chip" data-range="7" aria-pressed="true">7 dias</button>
+      <button class="chip" data-range="mes" aria-pressed="false">Este mês</button>
+      <button class="chip" data-range="tudo" aria-pressed="false">Tudo</button>
+      <select class="selsm" id="h-status" aria-label="Filtrar status"><option value="">Todos os status</option></select>
+      <input class="search" id="h-q" type="search" placeholder="Buscar placa, motorista, transportadora…" aria-label="Buscar">
+    </div>
+    <div class="tablebox"><table>
+      <thead><tr><th>Chegada</th><th>Placa</th><th>Motorista</th><th>Transportadora</th><th>Finalidade</th><th>Entrada</th><th>Saída</th><th>Perm.</th><th>Status</th></tr></thead>
+      <tbody id="hist-body"></tbody>
+    </table></div>
+    <p class="count" id="hist-nota"></p>
+  </section>
+
+  <section class="view" id="v-painel" hidden>
+    <div class="sec-h"><h2>Painel da guarita</h2><span class="sub" id="painel-sub"></span></div>
+    <div class="kpis" id="kpis"></div>
+    <div class="panel" id="conferir"></div>
+    <div class="grid2">
+      <div class="panel"><h3>Finalidades no mês</h3><div class="bars" id="b-fin"></div></div>
+      <div class="panel"><h3>Transportadoras no mês</h3><div class="bars" id="b-tr"></div></div>
+    </div>
+  </section>
+</main>
+</div>
+
+<dialog id="dlg">
+  <form class="dlg" id="form-ed" method="dialog" novalidate>
+    <div class="dlg-h"><span id="ed-plate"></span><h3>Editar registro</h3><button type="button" class="btn ghost x" id="ed-close" aria-label="Fechar">✕</button></div>
+    <div class="row2">
+      <div class="field"><label for="e-placa">Placa</label><input id="e-placa" maxlength="8" autocapitalize="characters"></div>
+      <div class="field"><label for="e-status">Status</label><select id="e-status"></select></div>
+    </div>
+    <div class="field"><label for="e-mot">Motorista</label><input id="e-mot" autocapitalize="characters"></div>
+    <div class="row2">
+      <div class="field"><label for="e-transp">Transportadora</label><input id="e-transp" list="dl-transp" autocapitalize="characters"></div>
+      <div class="field"><label for="e-fin">Finalidade</label><select id="e-fin"></select></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label for="e-cheg">Chegada</label><input id="e-cheg" type="datetime-local"></div>
+      <div class="field"><label for="e-ent">Entrada</label><input id="e-ent" type="datetime-local"></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label for="e-sai">Saída</label><input id="e-sai" type="datetime-local"></div>
+      <div class="field"><label>Permanência</label><div id="e-perm" style="font-family:var(--f-display);font-size:24px;font-weight:700;padding-top:6px">–</div></div>
+    </div>
+    <div class="field"><label for="e-obs">Observação</label><textarea id="e-obs"></textarea></div>
+    <div class="banner err" id="ed-err" hidden></div>
+    <div class="meta" id="ed-meta"></div>
+    <div class="acts">
+      <button type="button" class="btn danger" id="ed-del">Excluir</button>
+      <span style="flex:1"></span>
+      <button type="button" class="btn" id="ed-cancel">Cancelar</button>
+      <button type="submit" class="btn primary" id="ed-save">Salvar</button>
+    </div>
+  </form>
+</dialog>
+
+<div id="toast" class="toast" hidden role="status"></div>
+
+<script>
+(function(){
+"use strict";
+const API = String(window.GUARITA_API||"").trim();
+const POLL_MS = 10000;
+const STATUS = ["PATIO","AGUARDANDO NFE","CARREGANDO","DESCARREGANDO","SEM ORDEM","LIBERADO","FOI EMBORA","DESISTIU","OUTRO"];
+const OPEN = new Set(["PATIO","AGUARDANDO NFE","CARREGANDO","DESCARREGANDO","SEM ORDEM"]);
+const SLABEL = {"PATIO":"Aguardando entrada","AGUARDANDO NFE":"Aguardando NF-e","CARREGANDO":"Carregando","DESCARREGANDO":"Descarregando","SEM ORDEM":"Sem ordem","LIBERADO":"Liberado","FOI EMBORA":"Foi embora","DESISTIU":"Desistiu","OUTRO":"Outro"};
+
+const S = {docs:[], listas:{transportadoras:[],finalidades:[]}, dias:120, loaded:false, offline:false, lastOk:0,
+  cod:"", nome:"", tab:"patio", range:"7", q:"", st:"", editing:null, delArm:false, dupArm:false, chegManual:false, busy:new Set(), loading:false};
+const $ = s => document.querySelector(s);
+const esc = v => String(v ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const pad = n => String(n).padStart(2,"0");
+const hm = t => { const d=new Date(t); return pad(d.getHours())+":"+pad(d.getMinutes()); };
+const dm = t => { const d=new Date(t); return pad(d.getDate())+"/"+pad(d.getMonth()+1); };
+const dmhm = t => t ? dm(t)+" "+hm(t) : "–";
+const dur = ms => { if(ms==null||ms<0||isNaN(ms)) return "–"; const m=Math.round(ms/60000); return Math.floor(m/60)+":"+pad(m%60); };
+const toLocalInput = t => { if(!t) return ""; const d=new Date(t); return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())+"T"+pad(d.getHours())+":"+pad(d.getMinutes()); };
+const fromLocalInput = v => v ? new Date(v).getTime() : null;
+const normPlaca = v => String(v||"").toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,7);
+const placaOk = p => /^[A-Z]{3}\d[A-Z0-9]\d{2}$/.test(p);
+const startOfDay = (t=Date.now()) => { const d=new Date(t); d.setHours(0,0,0,0); return d.getTime(); };
+const startOfMonth = () => { const d=new Date(); d.setDate(1); d.setHours(0,0,0,0); return d.getTime(); };
+const isOpen = d => OPEN.has(d.status);
+const perm = d => (d.saida && d.chegada && d.saida>=d.chegada) ? d.saida-d.chegada : null;
+const sClass = s => "s-"+String(s||"OUTRO").replace(/ /g,"_");
+const pill = s => `<span class="pill ${sClass(s)}">${esc(SLABEL[s]||s||"Sem status")}</span>`;
+const plate = (p,sm) => `<span class="plate${sm?" sm":""}"><b>BRASIL</b><span>${esc(p)}</span></span>`;
+const isCarga = f => String(f||"").startsWith("CARREG");
+const ls = { get(k){ try{ return localStorage.getItem(k)||""; }catch(e){ return ""; } }, set(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }, del(k){ try{ localStorage.removeItem(k); }catch(e){} } };
+
+function issues(d){
+  const out=[];
+  if(!d.chegada) out.push("Sem horário de chegada");
+  if(d.entrada && d.chegada && d.entrada<d.chegada) out.push("Entrada antes da chegada");
+  if(d.saida && d.chegada && d.saida<d.chegada) out.push("Saída antes da chegada");
+  else if(d.saida && d.entrada && d.saida<d.entrada) out.push("Saída antes da entrada");
+  if(d.status==="LIBERADO" && !d.saida) out.push("Liberado sem horário de saída");
+  if(isOpen(d) && d.chegada && Date.now()-d.chegada>48*3600e3) out.push("No pátio há mais de 48 h");
+  return out;
+}
+
+/* ---------- API ---------- */
+async function apiGet(){
+  const r = await fetch(API+"?codigo="+encodeURIComponent(S.cod)+"&t="+Date.now(), {cache:"no-store"});
+  if(!r.ok) throw {erro:"rede"};
+  return r.json();
+}
+async function apiPost(body){
+  const r = await fetch(API, {method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify(Object.assign({codigo:S.cod, por:S.nome}, body))});
+  if(!r.ok) throw {erro:"rede"};
+  const j = await r.json();
+  if(!j.ok) throw j;
+  return j;
+}
+async function load(quiet){
+  if(S.loading || !S.cod) return; S.loading=true;
+  try{
+    const j = await apiGet();
+    if(!j.ok){ if(j.erro==="codigo"){ sair("O código de acesso mudou. Digite o código novo."); return; } throw j; }
+    if(!S.busy.size) S.docs = j.registros||[];
+    S.listas = j.listas||S.listas; S.dias = j.dias||S.dias;
+    S.loaded=true; S.offline=false; S.lastOk=Date.now();
+    fillListas(); render();
+  }catch(e){ S.offline=true; if(!quiet) render(); else setConn(); }
+  finally{ S.loading=false; }
+}
+let pollT=null;
+function startPoll(){ clearInterval(pollT); pollT=setInterval(()=>{ if(document.visibilityState==="visible") load(true); }, POLL_MS); }
+document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible" && S.cod) load(true); });
+window.addEventListener("online", ()=>S.cod && load(true));
+
+function errMsg(e){
+  if(e && e.erro==="codigo") return "Código de acesso errado ou trocado.";
+  if(e && e.erro==="conflito") return "Alguém alterou este veículo agora há pouco. A tela foi atualizada; confira e tente de novo.";
+  if(e && e.mensagem) return e.mensagem;
+  return "Sem conexão com a planilha. Confira a internet e tente de novo.";
+}
+
+/* ---------- entrar / sair ---------- */
+function showApp(on){ $("#v-login").hidden=on; $("#app").hidden=!on; }
+function sair(msg){
+  ls.del("guarita.cod"); S.cod=""; S.docs=[]; S.loaded=false; clearInterval(pollT);
+  showApp(false); $("#l-cod").value=""; $("#l-nome").value=S.nome;
+  const h=$("#l-hint"); h.className="hint"+(msg?" bad":""); h.textContent=msg||"Peça o código ao escritório.";
+  setTimeout(()=>$(S.nome?"#l-cod":"#l-nome").focus(),50);
+}
+$("#btn-sair").addEventListener("click", ()=>sair());
+$("#form-login").addEventListener("submit", async e=>{
+  e.preventDefault();
+  const nome=$("#l-nome").value.trim().toUpperCase(), cod=$("#l-cod").value.trim();
+  const h=$("#l-hint");
+  if(!nome){ h.className="hint bad"; h.textContent="Escreva seu nome, para o registro mostrar quem lançou."; $("#l-nome").focus(); return; }
+  if(!cod){ h.className="hint bad"; h.textContent="Digite o código de acesso."; $("#l-cod").focus(); return; }
+  if(!API || API.indexOf("http")!==0){ h.className="hint bad"; h.textContent="O site ainda não está ligado à planilha. Avise o Iago."; return; }
+  const b=$("#l-btn"); b.disabled=true; b.innerHTML='<span class="spin"></span> Entrando…';
+  S.cod=cod; S.nome=nome;
+  try{
+    const j=await apiGet();
+    if(!j.ok){ S.cod=""; h.className="hint bad"; h.textContent = j.erro==="codigo" ? "Código errado. Confira com o escritório." : (j.mensagem||"Erro na planilha."); }
+    else{
+      ls.set("guarita.cod",cod); ls.set("guarita.nome",nome);
+      S.docs=j.registros||[]; S.listas=j.listas||S.listas; S.dias=j.dias||S.dias; S.loaded=true; S.lastOk=Date.now();
+      enterApp();
+    }
+  }catch(err){ S.cod=""; h.className="hint bad"; h.textContent="Sem conexão com a planilha. Confira a internet."; }
+  b.disabled=false; b.textContent="Entrar";
+});
+function enterApp(){
+  showApp(true); $("#who-nome").textContent=S.nome;
+  fillListas(); setTab(S.tab); startPoll();
+}
+
+/* ---------- listas ---------- */
+function finOptions(sel, current){
+  const fins = S.listas.finalidades||[];
+  const grp = {"Carregar":[], "Descarregar":[], "Outros":[]};
+  fins.forEach(f=> (f.startsWith("CARREG")?grp.Carregar:f.startsWith("DESCARREG")?grp.Descarregar:grp.Outros).push(f));
+  let h = `<option value="" disabled ${current?"":"selected"}>Escolha…</option>`;
+  for(const [g,list] of Object.entries(grp)) if(list.length)
+    h += `<optgroup label="${g}">` + list.map(f=>`<option ${f===current?"selected":""}>${esc(f)}</option>`).join("") + `</optgroup>`;
+  if(current && !fins.includes(current)) h += `<optgroup label="Fora da lista"><option selected>${esc(current)}</option></optgroup>`;
+  sel.innerHTML = h;
+}
+function fillListas(){
+  const set = new Set(S.listas.transportadoras||[]);
+  S.docs.forEach(d=>d.transportadora && set.add(d.transportadora));
+  $("#dl-transp").innerHTML = [...set].sort().map(t=>`<option value="${esc(t)}">`).join("");
+  const keep=$("#f-fin").value; finOptions($("#f-fin"), keep||undefined);
+}
+$("#h-status").innerHTML += STATUS.map(s=>`<option value="${esc(s)}">${esc(SLABEL[s])}</option>`).join("");
+$("#e-status").innerHTML = STATUS.map(s=>`<option value="${esc(s)}">${esc(SLABEL[s])}</option>`).join("");
+
+/* ---------- abas ---------- */
+function setTab(t){
+  S.tab=t;
+  document.querySelectorAll(".tab").forEach(b=>b.setAttribute("aria-selected", String(b.dataset.tab===t)));
+  ["patio","nova","hist","painel"].forEach(v=>$("#v-"+v).hidden = v!==t);
+  if(t!=="nova") ls.set("guarita.tab", t);
+  if(t==="nova") setTimeout(()=>$("#f-placa").focus(),50);
+  render();
+}
+document.addEventListener("click", e=>{
+  const tb=e.target.closest("[data-tab]"); if(tb){ setTab(tb.dataset.tab); return; }
+  const go=e.target.closest("[data-go]"); if(go){ setTab(go.dataset.go); return; }
+});
+
+/* ---------- relógio ---------- */
+function tick(){ $("#clock").textContent = hm(Date.now()); if(!S.chegManual) $("#cheg-txt").textContent = "Agora · "+dm(Date.now())+" "+hm(Date.now()); }
+tick(); setInterval(()=>{ tick(); if(S.tab==="patio" && S.loaded) renderPatio(); setConn(); }, 30000);
+
+/* ---------- toast ---------- */
+let tt;
+function toast(msg, bad){ const el=$("#toast"); el.textContent=msg; el.className="toast"+(bad?" bad":""); el.hidden=false; clearTimeout(tt); tt=setTimeout(()=>el.hidden=true, bad?5000:3200); }
+
+/* ---------- conexão ---------- */
+function setConn(){
+  const el=$("#conn"); el.className="conn"; let t="Conectando";
+  const stale = S.lastOk && Date.now()-S.lastOk > 60000;
+  if(S.offline || stale){ el.classList.add("bad"); t="Sem conexão"; }
+  else if(S.loaded){ el.classList.add("live"); t="Ao vivo"; }
+  el.querySelector("span").textContent=t;
+  const b=$("#banner");
+  if((S.offline||stale) && S.loaded) b.innerHTML=`<div class="banner warn">Sem conexão com a planilha desde ${hm(S.lastOk)}. A tela pode estar desatualizada; ela volta sozinha quando a internet voltar.</div>`;
+  else if(S.offline) b.innerHTML=`<div class="banner err">Não foi possível ler a planilha. Confira a internet.</div>`;
+  else b.innerHTML="";
+}
+
+/* ---------- render ---------- */
+function render(){
+  setConn();
+  $("#n-patio").textContent = S.docs.filter(isOpen).length;
+  if(S.tab==="patio") renderPatio();
+  if(S.tab==="hist") renderHist();
+  if(S.tab==="painel") renderPainel();
+}
+function cardActs(d){
+  const a=[];
+  if(d.status==="PATIO"||d.status==="SEM ORDEM"){
+    a.push(`<button class="btn primary grow" data-act="entrou" data-id="${esc(d.id)}">Entrou</button>`);
+    a.push(`<button class="btn" data-act="nfe" data-id="${esc(d.id)}">Aguard. NF-e</button>`);
+    a.push(`<button class="btn ghost" data-act="desistiu" data-id="${esc(d.id)}">Desistiu</button>`);
+  } else if(d.status==="AGUARDANDO NFE"){
+    a.push(`<button class="btn go grow" data-act="liberar" data-id="${esc(d.id)}">Liberar saída</button>`);
+    a.push(`<button class="btn" data-act="entrou" data-id="${esc(d.id)}">${isCarga(d.finalidade)?"Voltou a carregar":"Voltou a descarregar"}</button>`);
+  } else {
+    a.push(`<button class="btn go grow" data-act="liberar" data-id="${esc(d.id)}">Liberar saída</button>`);
+    a.push(`<button class="btn" data-act="nfe" data-id="${esc(d.id)}">Aguard. NF-e</button>`);
+  }
+  a.push(`<button class="btn ghost" data-act="editar" data-id="${esc(d.id)}" aria-label="Editar ${esc(d.placa)}">Editar</button>`);
+  return a.join("");
+}
+function renderPatio(){
+  const now=Date.now();
+  const open = S.docs.filter(isOpen).sort((a,b)=>(a.chegada||0)-(b.chegada||0));
+  const box=$("#patio-cards");
+  if(!S.loaded) box.innerHTML=`<div class="empty"><strong>Carregando o pátio…</strong>Lendo a planilha da guarita.</div>`;
+  else if(!open.length) box.innerHTML=`<div class="empty"><strong>Pátio vazio</strong>Quando um caminhão chegar, toque em <b>+ Nova chegada</b> e registre a placa.</div>`;
+  else box.innerHTML = open.map(d=>{
+    const fl=issues(d);
+    return `<article class="card${fl.length?" alert":""}${S.busy.has(d.id)?" busy":""}">
+      <div class="c-top">${plate(d.placa)}<div class="c-who"><strong>${esc(d.motorista)}</strong><span>${esc(d.transportadora)}</span></div>${pill(d.status)}</div>
+      <div class="c-fin">${esc(d.finalidade)}</div>
+      <div class="c-times">
+        <div>Chegou<b>${d.chegada && startOfDay(d.chegada)!==startOfDay(now)?dm(d.chegada)+" ":""}${d.chegada?hm(d.chegada):"–"}</b></div>
+        <div>Entrou<b>${d.entrada?hm(d.entrada):"–"}</b></div>
+        <div class="elapsed">No pátio há<b>${d.chegada?dur(now-d.chegada):"–"}</b></div>
+      </div>
+      ${d.obs?`<div class="c-obs">${esc(d.obs)}</div>`:""}
+      ${fl.length?`<div class="flags">${fl.map(f=>`<span class="flag">${esc(f)}</span>`).join("")}</div>`:""}
+      <div class="acts">${cardActs(d)}</div>
+    </article>`;
+  }).join("");
+  const aguard = open.filter(d=>d.status==="PATIO").length;
+  $("#patio-sub").textContent = open.length ? `${open.length} veículo${open.length>1?"s":""} · ${aguard} aguardando entrada` : "";
+  const sod=startOfDay();
+  const saiu = S.docs.filter(d=>!isOpen(d) && d.saida && d.saida>=sod).sort((a,b)=>b.saida-a.saida);
+  $("#hoje-sub").textContent = saiu.length ? `${saiu.length} saída${saiu.length>1?"s":""}` : "";
+  $("#hoje-list").innerHTML = saiu.length ? `<div class="today-list">${saiu.map(d=>`
+    <div class="trow" data-act="editar" data-id="${esc(d.id)}" tabindex="0">${plate(d.placa,true)}
+      <div class="t-main"><div><b>${esc(d.motorista)}</b> · ${esc(d.transportadora)}</div><small>${esc(d.finalidade)} · saiu ${hm(d.saida)}</small></div>
+      <span class="t-perm">${dur(perm(d))}</span>${pill(d.status)}</div>`).join("")}</div>`
+    : `<div class="empty">Nenhuma saída registrada hoje.</div>`;
+}
+function histRows(){
+  let from=0; const now=Date.now();
+  if(S.range==="hoje") from=startOfDay();
+  else if(S.range==="7") from=startOfDay(now-6*864e5);
+  else if(S.range==="mes") from=startOfMonth();
+  const q=S.q.trim().toUpperCase();
+  return S.docs.filter(d=>(d.chegada||0)>=from)
+    .filter(d=>!S.st || d.status===S.st)
+    .filter(d=>!q || [d.placa,d.motorista,d.transportadora,d.finalidade,d.obs].join(" ").toUpperCase().includes(q))
+    .sort((a,b)=>(b.chegada||0)-(a.chegada||0));
+}
+function renderHist(){
+  const rows=histRows();
+  $("#hist-count").textContent = `${rows.length} registro${rows.length===1?"":"s"}`;
+  document.querySelectorAll("[data-range]").forEach(b=>b.setAttribute("aria-pressed", String(b.dataset.range===S.range)));
+  $("#btn-csv").disabled = !rows.length;
+  $("#hist-nota").textContent = `O app mostra os últimos ${S.dias} dias. O histórico completo fica na Planilha Google da guarita.`;
+  $("#hist-body").innerHTML = rows.length ? rows.map(d=>{
+    const fl=issues(d);
+    return `<tr data-act="editar" data-id="${esc(d.id)}" title="${esc(fl.join(" · "))}">
+      <td class="num">${dmhm(d.chegada)}</td><td>${plate(d.placa,true)}</td><td>${esc(d.motorista)}</td><td>${esc(d.transportadora)}</td>
+      <td>${esc(d.finalidade)}</td><td class="num">${d.entrada?dmhm(d.entrada):"–"}</td><td class="num">${d.saida?dmhm(d.saida):"–"}</td>
+      <td class="perm">${fl.length?`<span class="warnico" aria-label="${esc(fl.join(", "))}">⚠</span> `:""}${dur(perm(d))}</td><td>${pill(d.status)}</td></tr>`;
+  }).join("") : `<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:24px">${S.loaded?"Nenhum registro neste filtro.":"Carregando…"}</td></tr>`;
+}
+function bars(map, cls){
+  const arr=[...map.entries()].sort((a,b)=>b[1]-a[1]).slice(0,8);
+  if(!arr.length) return `<div class="count">Sem entradas no mês.</div>`;
+  const max=arr[0][1];
+  return arr.map(([k,v])=>`<div class="bar ${cls||""}"><span class="lbl">${esc(k)}</span><span class="val">${v}</span><span class="trk"><i style="width:${Math.max(4,v/max*100)}%"></i></span></div>`).join("");
+}
+function renderPainel(){
+  const sod=startOfDay(), som=startOfMonth();
+  const open=S.docs.filter(isOpen), hoje=S.docs.filter(d=>(d.chegada||0)>=sod), mes=S.docs.filter(d=>(d.chegada||0)>=som);
+  const perms=mes.map(perm).filter(v=>v!=null);
+  const media=perms.length?perms.reduce((a,b)=>a+b,0)/perms.length:null;
+  const carg=mes.filter(d=>isCarga(d.finalidade)).length, desc=mes.filter(d=>String(d.finalidade||"").startsWith("DESCARREG")).length;
+  $("#painel-sub").textContent = new Date().toLocaleDateString("pt-BR",{month:"long",year:"numeric"});
+  $("#kpis").innerHTML = `
+    <div class="kpi hl"><small>No pátio agora</small><b>${open.length}</b><span>${open.filter(d=>d.status==="PATIO").length} aguardando entrada</span></div>
+    <div class="kpi"><small>Entradas hoje</small><b>${hoje.length}</b><span>${dm(sod)}</span></div>
+    <div class="kpi"><small>Entradas no mês</small><b>${mes.length}</b><span>${carg} carregamentos · ${desc} descargas</span></div>
+    <div class="kpi"><small>Permanência média</small><b>${dur(media)}</b><span>chegada → saída, ${perms.length} veículos</span></div>`;
+  const conf=S.docs.filter(d=>issues(d).length).sort((a,b)=>(b.chegada||0)-(a.chegada||0));
+  $("#conferir").innerHTML = `<h3>Registros para conferir ${conf.length?`<span class="pill" style="background:var(--red-soft);color:var(--red)">${conf.length}</span>`:""}</h3>` +
+    (conf.length ? `<div class="today-list">${conf.slice(0,30).map(d=>`<div class="trow" data-act="editar" data-id="${esc(d.id)}" tabindex="0">${plate(d.placa,true)}
+      <div class="t-main"><div><b>${esc(d.motorista)}</b> · chegou ${dmhm(d.chegada)}</div><small style="color:var(--red)">${esc(issues(d).join(" · "))}</small></div></div>`).join("")}</div>`
+      : `<div class="count">Tudo certo: nenhum horário fora de ordem.</div>`);
+  const fm=new Map(), tm=new Map();
+  mes.forEach(d=>{ fm.set(d.finalidade||"—",(fm.get(d.finalidade||"—")||0)+1); tm.set(d.transportadora||"—",(tm.get(d.transportadora||"—")||0)+1); });
+  $("#b-fin").innerHTML=bars(fm); $("#b-tr").innerHTML=bars(tm,"g");
+}
+
+/* ---------- gravação ---------- */
+const byId = id => S.docs.find(d=>d.id===id);
+function putDoc(r){ const i=S.docs.findIndex(d=>d.id===r.id); if(i>=0) S.docs[i]=r; else S.docs.push(r); }
+async function upd(d, campos, msg){
+  if(S.busy.has(d.id)) return;
+  const antes = Object.assign({}, d);
+  Object.assign(d, campos); S.busy.add(d.id); render();
+  try{
+    const j = await apiPost({acao:"atualizar", id:d.id, versao:antes.versao, campos});
+    S.busy.delete(d.id); putDoc(j.registro); render(); if(msg) toast(msg);
+  }catch(e){
+    S.busy.delete(d.id);
+    if(e && e.erro==="conflito" && e.atual) putDoc(e.atual); else putDoc(antes);
+    if(e && e.erro==="nao_encontrado") S.docs=S.docs.filter(x=>x.id!==d.id);
+    render(); toast(errMsg(e), true);
+    if(e && e.erro==="codigo") sair("O código de acesso mudou. Digite o código novo.");
+  }
+}
+document.addEventListener("click", e=>{
+  const b=e.target.closest("[data-act]"); if(!b) return;
+  const d=byId(b.dataset.id); if(!d) return;
+  const now=Date.now();
+  switch(b.dataset.act){
+    case "entrou": upd(d,{status:isCarga(d.finalidade)?"CARREGANDO":"DESCARREGANDO", entrada:d.entrada||now}, `${d.placa} entrou · ${hm(d.entrada||now)}`); break;
+    case "nfe": upd(d,{status:"AGUARDANDO NFE"}, `${d.placa} aguardando NF-e`); break;
+    case "liberar": upd(d,{status:"LIBERADO", saida:now}, `${d.placa} liberado · permanência ${dur(now-(d.chegada||now))}`); break;
+    case "desistiu": upd(d,{status:"DESISTIU", saida:now}, `${d.placa} marcado como desistiu`); break;
+    case "editar": openEdit(d); break;
+  }
+});
+document.addEventListener("keydown", e=>{ if(e.key==="Enter" && e.target.matches(".trow")) e.target.click(); });
+
+/* ---------- nova chegada ---------- */
+const fPlaca=$("#f-placa");
+function resetPlacaHint(){ const h=$("#h-placa"); h.className="hint"; h.textContent="Mercosul (ABC1D23) ou antiga (ABC1234)."; }
+fPlaca.addEventListener("input", ()=>{
+  const p=normPlaca(fPlaca.value); fPlaca.value=p; S.dupArm=false;
+  const h=$("#h-placa"), dup=$("#dup");
+  dup.hidden=true; $("#btn-reg").textContent="Registrar chegada";
+  if(p.length<7){ resetPlacaHint(); return; }
+  if(!placaOk(p)){ h.className="hint bad"; h.textContent="Placa fora do padrão. Confira as letras e números."; return; }
+  const last=S.docs.filter(d=>d.placa===p).sort((a,b)=>(b.chegada||0)-(a.chegada||0))[0];
+  if(last){
+    h.className="hint"; h.textContent=`Última visita: ${dmhm(last.chegada)} · ${last.transportadora||""} · ${last.finalidade||""}`;
+    if(!$("#f-mot").value) $("#f-mot").value=last.motorista||"";
+    if(!$("#f-transp").value) $("#f-transp").value=last.transportadora||"";
+  } else { h.className="hint"; h.textContent="Primeira visita desta placa nos últimos "+S.dias+" dias."; }
+  const aberto=S.docs.find(d=>d.placa===p && isOpen(d));
+  if(aberto){ dup.hidden=false; dup.textContent=`${p} já está no pátio desde ${dmhm(aberto.chegada)} (${SLABEL[aberto.status]}). Se for outra viagem, toque de novo em registrar.`; }
+});
+$("#cheg-adj").addEventListener("click", ()=>{
+  S.chegManual=true; const i=$("#f-cheg"); i.hidden=false; i.value=toLocalInput(Date.now());
+  $("#cheg-txt").textContent="Horário informado:"; $("#cheg-adj").hidden=true; i.focus();
+});
+function newId(){ return "A"+Date.now().toString(36).toUpperCase()+Math.random().toString(36).slice(2,6).toUpperCase(); }
+let pendingId=null;
+$("#form-nova").addEventListener("submit", async e=>{
+  e.preventDefault();
+  const p=normPlaca(fPlaca.value), mot=$("#f-mot").value.trim().toUpperCase(), tr=$("#f-transp").value.trim().toUpperCase(), fin=$("#f-fin").value, obs=$("#f-obs").value.trim();
+  if(!placaOk(p)){ toast("Confira a placa: use ABC1D23 ou ABC1234.", true); fPlaca.focus(); return; }
+  if(!mot){ toast("Informe o motorista.", true); $("#f-mot").focus(); return; }
+  if(!tr){ toast("Informe a transportadora.", true); $("#f-transp").focus(); return; }
+  if(!fin){ toast("Escolha a finalidade.", true); $("#f-fin").focus(); return; }
+  const cheg = S.chegManual ? fromLocalInput($("#f-cheg").value) : Date.now();
+  if(!cheg){ toast("Informe o horário de chegada.", true); return; }
+  if(cheg>Date.now()+5*60e3){ toast("A chegada não pode ser no futuro.", true); return; }
+  if(S.docs.some(d=>d.placa===p && isOpen(d)) && !S.dupArm){ S.dupArm=true; $("#btn-reg").textContent="Registrar mesmo assim"; return; }
+  const btn=$("#btn-reg"); btn.disabled=true; btn.innerHTML='<span class="spin"></span> Salvando na planilha…';
+  pendingId = pendingId || newId();   // mesmo id se tentar de novo: não duplica
+  try{
+    const j = await apiPost({acao:"criar", registro:{id:pendingId, placa:p, motorista:mot, transportadora:tr, finalidade:fin, obs, chegada:cheg}});
+    putDoc(j.registro); pendingId=null;
+    toast(`Chegada registrada · ${p} às ${hm(cheg)}`);
+    e.target.reset(); finOptions($("#f-fin")); S.chegManual=false; S.dupArm=false;
+    $("#f-cheg").hidden=true; $("#cheg-adj").hidden=false; $("#dup").hidden=true; resetPlacaHint(); tick();
+    setTab("patio");
+  }catch(err){ toast(errMsg(err), true); if(err && err.erro==="validacao") pendingId=null; }
+  btn.disabled=false; btn.textContent= S.dupArm ? "Registrar mesmo assim" : "Registrar chegada";
+});
+
+/* ---------- histórico ---------- */
+document.querySelectorAll("[data-range]").forEach(b=>b.addEventListener("click",()=>{ S.range=b.dataset.range; renderHist(); }));
+$("#h-status").addEventListener("change", e=>{ S.st=e.target.value; renderHist(); });
+let qT; $("#h-q").addEventListener("input", e=>{ clearTimeout(qT); qT=setTimeout(()=>{ S.q=e.target.value; renderHist(); },150); });
+$("#btn-csv").addEventListener("click", ()=>{
+  const br = t => t ? new Date(t).toLocaleDateString("pt-BR") : "";
+  const cell = v => `"${String(v??"").replace(/"/g,'""')}"`;
+  const head=["DATA CHEGADA","HORA CHEGADA","STATUS","PLACA","MOTORISTA","TRANSPORTADORA","FINALIDADE","DATA ENTRADA","HORA ENTRADA","DATA SAÍDA","HORA SAÍDA","PERMANÊNCIA","OBSERVAÇÃO","CONFERIR"];
+  const lines=[head.join(";")].concat(histRows().slice().reverse().map(d=>[br(d.chegada),d.chegada?hm(d.chegada):"",d.status,d.placa,d.motorista,d.transportadora,d.finalidade,br(d.entrada),d.entrada?hm(d.entrada):"",br(d.saida),d.saida?hm(d.saida):"",perm(d)!=null?dur(perm(d)):"",d.obs,issues(d).join(" / ")].map(cell).join(";")));
+  const now=new Date();
+  const blob=new Blob(["﻿"+lines.join("\r\n")],{type:"text/csv;charset=utf-8"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
+  a.download=`guarita-batovi-${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}.csv`;
+  document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },1000);
+});
+
+/* ---------- edição ---------- */
+const dlg=$("#dlg");
+function calcPerm(){ const c=fromLocalInput($("#e-cheg").value), s=fromLocalInput($("#e-sai").value); $("#e-perm").textContent = (c&&s&&s>=c)?dur(s-c):"–"; }
+["#e-cheg","#e-sai"].forEach(s=>$(s).addEventListener("input",calcPerm));
+function openEdit(d){
+  S.editing=d.id; S.delArm=false; $("#ed-del").textContent="Excluir";
+  $("#ed-plate").innerHTML=plate(d.placa,true);
+  $("#e-placa").value=d.placa||""; $("#e-status").value=STATUS.includes(d.status)?d.status:"OUTRO";
+  $("#e-mot").value=d.motorista||""; $("#e-transp").value=d.transportadora||"";
+  finOptions($("#e-fin"), d.finalidade);
+  $("#e-cheg").value=toLocalInput(d.chegada); $("#e-ent").value=toLocalInput(d.entrada); $("#e-sai").value=toLocalInput(d.saida);
+  $("#e-obs").value=d.obs||""; calcPerm();
+  const fl=issues(d); const er=$("#ed-err"); er.hidden=!fl.length; er.textContent=fl.length?"Conferir: "+fl.join(" · "):"";
+  $("#ed-meta").textContent = d.atualizadoEm ? `Última alteração: ${d.atualizadoPor||"—"} em ${dmhm(d.atualizadoEm)}` : "";
+  if(dlg.showModal) dlg.showModal(); else dlg.setAttribute("open","");
+}
+function closeEdit(){ S.editing=null; if(dlg.close) dlg.close(); else dlg.removeAttribute("open"); }
+$("#ed-close").addEventListener("click",closeEdit); $("#ed-cancel").addEventListener("click",closeEdit);
+$("#form-ed").addEventListener("submit", async e=>{
+  e.preventDefault();
+  const d=byId(S.editing); if(!d) return;
+  const p=normPlaca($("#e-placa").value);
+  const c=fromLocalInput($("#e-cheg").value), en=fromLocalInput($("#e-ent").value), sa=fromLocalInput($("#e-sai").value);
+  const st=$("#e-status").value; const er=$("#ed-err");
+  const bad = !placaOk(p)?"Placa fora do padrão (ABC1D23 ou ABC1234).":
+    !c?"Informe a chegada.":
+    (en&&en<c)?"A entrada não pode ser antes da chegada.":
+    (sa&&sa<c)?"A saída não pode ser antes da chegada.":
+    (sa&&en&&sa<en)?"A saída não pode ser antes da entrada.":
+    (st==="LIBERADO"&&!sa)?"Para status Liberado, informe a saída.":
+    (OPEN.has(st)&&sa)?"Veículo no pátio não tem saída. Apague a saída ou mude o status.":"";
+  if(bad){ er.hidden=false; er.textContent=bad; return; }
+  closeEdit();
+  await upd(d,{placa:p, status:st, motorista:$("#e-mot").value.trim().toUpperCase(), transportadora:$("#e-transp").value.trim().toUpperCase(), finalidade:$("#e-fin").value, chegada:c, entrada:en, saida:sa, obs:$("#e-obs").value.trim()}, "Registro atualizado");
+});
+$("#ed-del").addEventListener("click", async ()=>{
+  if(!S.delArm){ S.delArm=true; $("#ed-del").textContent="Toque de novo para excluir"; return; }
+  const d=byId(S.editing); closeEdit(); if(!d) return;
+  try{ await apiPost({acao:"excluir", id:d.id, versao:d.versao}); S.docs=S.docs.filter(x=>x.id!==d.id); render(); toast("Registro excluído (fica guardado na aba EXCLUÍDOS)"); }
+  catch(err){ if(err && err.erro==="conflito" && err.atual){ putDoc(err.atual); render(); } toast(errMsg(err), true); }
+});
+
+/* ---------- início ---------- */
+S.nome = ls.get("guarita.nome"); S.cod = ls.get("guarita.cod");
+const t0 = ls.get("guarita.tab"); if(["patio","hist","painel"].includes(t0)) S.tab=t0;
+if(S.cod && API){ enterApp(); load(); } else sair();
+})();
+</script>
+</body>
+</html>
