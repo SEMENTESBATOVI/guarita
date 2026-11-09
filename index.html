@@ -221,6 +221,10 @@ dialog::backdrop{background:rgba(15,18,12,.55)}
 .brand-txt{border-left:1px solid var(--line);padding-left:10px;min-width:0}
 .logo-login{height:64px;width:auto;display:block}
 @media (max-width:460px){.logo{height:32px}}
+.fila{display:flex;gap:6px;flex-wrap:wrap}
+.fila span{display:inline-flex;align-items:baseline;gap:4px;font-size:13px;font-weight:600;border-radius:8px;padding:3px 9px;color:var(--ink);background:var(--sunk)}
+.fila b{font-family:var(--f-display);font-size:20px;line-height:1}
+.fila .fila-p{background:var(--orange-soft);color:var(--orange)}
 .btn .spin{width:14px;height:14px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;display:inline-block}
 @media (prefers-reduced-motion:no-preference){.btn .spin{animation:rot .7s linear infinite}@keyframes rot{to{transform:rotate(360deg)}}}
 .card.busy{opacity:.6;pointer-events:none}
@@ -587,14 +591,19 @@ function renderPatio(){
   const doProd = d => !S.ptProd || produto(d.finalidade)===S.ptProd;
   const open = S.docs.filter(isOpen).filter(doProd).sort((a,b)=>(a.chegada||0)-(b.chegada||0));
   const box=$("#patio-cards");
+  // Ordem de chegada de quem ainda espera entrar (geral e por produto)
+  const filaPos={}; const porProd={};
+  S.docs.filter(d=>d.status==="PATIO"||d.status==="SEM ORDEM").sort((a,b)=>(a.chegada||0)-(b.chegada||0)||String(a.id).localeCompare(String(b.id)))
+    .forEach((d,i)=>{ const pr=produto(d.finalidade); porProd[pr]=(porProd[pr]||0)+1; filaPos[d.id]={g:i+1, p:porProd[pr], prod:pr}; });
   if(!S.loaded) box.innerHTML=`<div class="empty"><strong>Carregando o pátio…</strong>Lendo a planilha da guarita.</div>`;
   else if(!open.length && S.ptProd) box.innerHTML=`<div class="empty"><strong>Nenhum caminhão de ${esc(S.ptProd)} no pátio</strong>Escolha <b>Todos os produtos</b> para ver os outros.</div>`;
   else if(!open.length) box.innerHTML=`<div class="empty"><strong>Pátio vazio</strong>Quando um caminhão chegar, toque em <b>+ Nova chegada</b> e registre a placa.</div>`;
   else box.innerHTML = open.map(d=>{
-    const fl=issues(d);
+    const fl=issues(d); const fq=filaPos[d.id];
     return `<article class="card${fl.length?" alert":""}${S.busy.has(d.id)?" busy":""}">
       <div class="c-top">${plate(d.placa)}<div class="c-who"><strong>${esc(d.motorista)}</strong><span>${esc(d.transportadora)}</span></div>${pill(d.status)}</div>
       <div class="c-fin">${esc(d.finalidade)}</div>
+      ${fq?`<div class="fila" title="Ordem de chegada entre os que aguardam entrada"><span class="fila-g"><b>${fq.g}º</b> geral</span><span class="fila-p"><b>${fq.p}º</b> de ${esc(fq.prod)}</span></div>`:""}
       <div class="c-times">
         <div>Chegou<b>${d.chegada && startOfDay(d.chegada)!==startOfDay(now)?dm(d.chegada)+" ":""}${d.chegada?hm(d.chegada):"–"}</b></div>
         <div>Entrou<b>${d.entrada?hm(d.entrada):"–"}</b></div>
