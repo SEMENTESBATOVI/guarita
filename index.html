@@ -53,7 +53,7 @@ body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:1
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
 button,input,select,textarea{font:inherit;color:inherit}
 :focus-visible{outline:3px solid var(--orange);outline-offset:2px}
-.wrap{max-width:980px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1280px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 
 /* Cabeçalho */
 header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
@@ -228,6 +228,23 @@ dialog::backdrop{background:rgba(15,18,12,.55)}
 .card{position:relative}
 .card.has-fila{padding-bottom:24px}
 .fila-geral{position:absolute;right:12px;bottom:6px;font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.02em}
+.patio-grid{display:grid;gap:16px;grid-template-columns:1fr}
+.patio-main{display:grid;gap:12px;min-width:0;align-content:start}
+@media (min-width:1000px){.patio-grid{grid-template-columns:250px minmax(0,1fr)}.resumo{position:sticky;top:calc(env(safe-area-inset-top,0px) + 112px);align-self:start;max-height:calc(100vh - 130px);overflow:auto}}
+.resumo{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;display:grid;gap:12px;align-content:start}
+.resumo h3{margin:0;font-family:var(--f-display);font-size:15px;text-transform:uppercase;letter-spacing:.05em;display:flex;justify-content:space-between;align-items:baseline}
+.resumo h3 b{font-size:20px}
+.resumo .grp{display:grid;gap:2px}
+.rl{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:0 8px;align-items:baseline;border:0;background:none;text-align:left;padding:6px 8px;border-radius:8px;cursor:pointer;width:100%}
+.rl:hover{background:var(--sunk)}
+.rl[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.rl[aria-pressed="true"] small{color:var(--bg);opacity:.8}
+.rl span{font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rl b{font-family:var(--f-display);font-size:20px;line-height:1;font-variant-numeric:tabular-nums}
+.rl small{grid-column:1/-1;font-size:11px;color:var(--muted)}
+.resumo .vazio{font-size:13px;color:var(--muted);padding:0 8px}
+.resumo .lim{border:0;background:none;color:var(--orange);font-weight:600;cursor:pointer;padding:0 8px;text-align:left;font-size:13px;text-decoration:underline;text-underline-offset:2px}
+@media (max-width:999px){.resumo .grp{grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:4px}.rl{border:1px solid var(--line)}}
 .btn .spin{width:14px;height:14px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;display:inline-block}
 @media (prefers-reduced-motion:no-preference){.btn .spin{animation:rot .7s linear infinite}@keyframes rot{to{transform:rotate(360deg)}}}
 .card.busy{opacity:.6;pointer-events:none}
@@ -279,8 +296,13 @@ dialog::backdrop{background:rgba(15,18,12,.55)}
 
   <section class="view" id="v-patio">
     <div class="sec-h"><h2>No pátio agora</h2><span class="sub" id="patio-sub"></span><span class="sp"><button class="btn primary" data-go="nova">+ Nova chegada</button></span></div>
-    <div class="filters"><select class="selsm" id="pt-prod" aria-label="Filtrar por produto"><option value="">Todos os produtos</option></select></div>
-    <div id="patio-cards" class="cards"></div>
+    <div class="patio-grid">
+      <aside class="resumo" id="resumo" aria-label="Resumo do pátio"></aside>
+      <div class="patio-main">
+        <div class="filters"><select class="selsm" id="pt-prod" aria-label="Filtrar por produto"><option value="">Todos os produtos</option></select><span class="count" id="pt-grupo-tag"></span></div>
+        <div id="patio-cards" class="cards"></div>
+      </div>
+    </div>
     <div class="sec-h"><h2>Saíram hoje</h2><span class="sub" id="hoje-sub"></span></div>
     <div id="hoje-list"></div>
   </section>
@@ -591,7 +613,8 @@ function cardActs(d){
 function renderPatio(){
   const now=Date.now();
   if(typeof fillProdSel==="function") fillProdSel($("#pt-prod"), "ptProd");
-  const doProd = d => !S.ptProd || produto(d.finalidade)===S.ptProd;
+  renderResumo();
+  const doProd = d => (!S.ptProd || produto(d.finalidade)===S.ptProd) && (!S.ptGrupo || (g=>g.tipo+":"+g.nome)(grupoResumo(d))===S.ptGrupo);
   const open = S.docs.filter(isOpen).filter(doProd).sort((a,b)=>(a.chegada||0)-(b.chegada||0));
   const box=$("#patio-cards");
   // Ordem de chegada de quem ainda espera entrar (geral e por produto)
@@ -599,7 +622,7 @@ function renderPatio(){
   S.docs.filter(d=>d.status==="PATIO"||d.status==="SEM ORDEM").sort((a,b)=>(a.chegada||0)-(b.chegada||0)||String(a.id).localeCompare(String(b.id)))
     .forEach((d,i)=>{ const pr=produto(d.finalidade); porProd[pr]=(porProd[pr]||0)+1; filaPos[d.id]={g:i+1, p:porProd[pr], prod:pr}; });
   if(!S.loaded) box.innerHTML=`<div class="empty"><strong>Carregando o pátio…</strong>Lendo a planilha da guarita.</div>`;
-  else if(!open.length && S.ptProd) box.innerHTML=`<div class="empty"><strong>Nenhum caminhão de ${esc(S.ptProd)} no pátio</strong>Escolha <b>Todos os produtos</b> para ver os outros.</div>`;
+  else if(!open.length && (S.ptProd||S.ptGrupo)) box.innerHTML=`<div class="empty"><strong>Nenhum caminhão de ${esc(S.ptGrupo?S.ptGrupo.slice(2):S.ptProd)} no pátio</strong>Escolha <b>Todos os produtos</b> para ver os outros.</div>`;
   else if(!open.length) box.innerHTML=`<div class="empty"><strong>Pátio vazio</strong>Quando um caminhão chegar, toque em <b>+ Nova chegada</b> e registre a placa.</div>`;
   else box.innerHTML = open.map(d=>{
     const fl=issues(d); const fq=filaPos[d.id];
@@ -619,7 +642,7 @@ function renderPatio(){
     </article>`;
   }).join("");
   const aguard = open.filter(d=>d.status==="PATIO").length;
-  $("#patio-sub").textContent = open.length ? `${open.length} veículo${open.length>1?"s":""}${S.ptProd?" de "+S.ptProd:""} · ${aguard} aguardando entrada` : "";
+  $("#patio-sub").textContent = open.length ? `${open.length} veículo${open.length>1?"s":""}${S.ptGrupo?" de "+S.ptGrupo.slice(2):S.ptProd?" de "+S.ptProd:""} · ${aguard} aguardando entrada` : "";
   const sod=startOfDay();
   const saiu = S.docs.filter(d=>!isOpen(d) && d.saida && d.saida>=sod).filter(doProd).sort((a,b)=>b.saida-a.saida);
   $("#hoje-sub").textContent = saiu.length ? `${saiu.length} saída${saiu.length>1?"s":""}` : "";
@@ -688,7 +711,7 @@ function fillProdSel(sel, key){
   sel.innerHTML=h; if(cur && ![...set.keys()].includes(cur)){ S[key]=""; sel.value=""; }
 }
 S.ptProd = ls.get("guarita.ptprod")||"";
-$("#pt-prod").addEventListener("change",e=>{ S.ptProd=e.target.value; ls.set("guarita.ptprod",S.ptProd); renderPatio(); });
+$("#pt-prod").addEventListener("change",e=>{ S.ptProd=e.target.value; ls.set("guarita.ptprod",S.ptProd); if(S.ptProd){ S.ptGrupo=""; ls.set("guarita.ptgrupo",""); } renderPatio(); });
 $("#p-prod").addEventListener("change",e=>{ S.pProd=e.target.value; ls.set("guarita.pprod",S.pProd); renderPainel(); });
 document.querySelectorAll("[data-prange]").forEach(b=>b.addEventListener("click",()=>{ S.pRange=b.dataset.prange; ls.set("guarita.prange",S.pRange); renderPainel(); }));
 function renderPainel(){
@@ -720,6 +743,37 @@ function renderPainel(){
   $("#h-bprod").textContent = S.pProd ? "Finalidades no período" : "Produtos no período";
   $("#b-fin").innerHTML=bars(fm); $("#b-tr").innerHTML=bars(tm,"g");
 }
+
+/* ---------- resumo do pátio (lado esquerdo) ---------- */
+// Carregar: soja/milho por empresa (SOJA LDC, SOJA BUNGE…), demais por produto. Descarregar: por produto.
+function grupoResumo(d){
+  const f=String(d.finalidade||"").toUpperCase().trim();
+  if(isCarga(f)){ const s=f.replace(/^CARREG\w*\s+/,""); return {tipo:"C", nome:/^(SOJA|MILHO)\b/.test(s)?s:produto(f)}; }
+  if(f.startsWith("DESCARREG")) return {tipo:"D", nome:produto(f)};
+  return {tipo:"O", nome:produto(f)};
+}
+S.ptGrupo = ls.get("guarita.ptgrupo")||"";
+function renderResumo(){
+  const open=S.docs.filter(isOpen);
+  const m={C:new Map(),D:new Map(),O:new Map()};
+  open.forEach(d=>{ const g=grupoResumo(d); const k=g.tipo+":"+g.nome; const x=m[g.tipo].get(k)||{nome:g.nome,t:0,a:0,i:0,n:0}; x.t++; if(d.status==="PATIO"||d.status==="SEM ORDEM") x.a++; else if(d.status==="AGUARDANDO NFE") x.n++; else x.i++; m[g.tipo].set(k,x); });
+  if(S.ptGrupo && ![...m.C.keys(),...m.D.keys(),...m.O.keys()].includes(S.ptGrupo)){ S.ptGrupo=""; ls.set("guarita.ptgrupo",""); }
+  const linhas=(mp)=>[...mp.entries()].sort((a,b)=>b[1].t-a[1].t||a[1].nome.localeCompare(b[1].nome)).map(([k,x])=>
+    `<button type="button" class="rl" data-grupo="${esc(k)}" aria-pressed="${S.ptGrupo===k}"><span>${esc(x.nome)}</span><b>${x.t}</b><small>${[x.a?x.a+" aguardando":"",x.i?x.i+" dentro":"",x.n?x.n+" aguard. NF-e":""].filter(Boolean).join(" · ")}</small></button>`).join("");
+  const tot=mp=>[...mp.values()].reduce((s,x)=>s+x.t,0);
+  $("#resumo").innerHTML =
+    `<div><h3>Carregar <b>${tot(m.C)}</b></h3><div class="grp">${m.C.size?linhas(m.C):`<div class="vazio">Nenhum no pátio.</div>`}</div></div>`+
+    `<div><h3>Descarregar <b>${tot(m.D)}</b></h3><div class="grp">${m.D.size?linhas(m.D):`<div class="vazio">Nenhum no pátio.</div>`}</div></div>`+
+    (m.O.size?`<div><h3>Outros <b>${tot(m.O)}</b></h3><div class="grp">${linhas(m.O)}</div></div>`:"")+
+    (S.ptGrupo?`<button type="button" class="lim" data-grupo="">Mostrar todos</button>`:"");
+  $("#pt-grupo-tag").textContent = S.ptGrupo ? "Mostrando: "+S.ptGrupo.slice(2) : "";
+}
+document.addEventListener("click", e=>{
+  const b=e.target.closest("[data-grupo]"); if(!b) return;
+  const k=b.dataset.grupo; S.ptGrupo = (S.ptGrupo===k)?"":k; ls.set("guarita.ptgrupo",S.ptGrupo);
+  if(S.ptGrupo){ S.ptProd=""; ls.set("guarita.ptprod",""); }
+  renderPatio();
+});
 
 /* ---------- gravação ---------- */
 const byId = id => S.docs.find(d=>d.id===id);
