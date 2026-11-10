@@ -232,6 +232,16 @@ dialog::backdrop{background:rgba(15,18,12,.55)}
 .fila-geral{position:absolute;right:12px;bottom:6px;font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.02em}
 .patio-grid{display:grid;gap:16px;grid-template-columns:1fr}
 .patio-main{display:grid;gap:12px;min-width:0;align-content:start}
+.secs{display:grid;gap:22px}
+.psec{display:grid;gap:10px}
+.psec-h{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;border-bottom:2px solid var(--line);padding-bottom:6px}
+.psec-h h3{margin:0;font-family:var(--f-display);font-size:18px;text-transform:uppercase;letter-spacing:.04em}
+.psec-h b{font-family:var(--f-display);font-size:16px;border-radius:999px;padding:0 9px;line-height:24px;background:var(--sunk)}
+.psec-h span{font-size:13px;color:var(--muted)}
+.psec-fila .psec-h{border-color:var(--yellow)} .psec-fila .psec-h b{background:var(--yellow);color:#3A3200}
+.psec-dentro .psec-h{border-color:var(--orange)} .psec-dentro .psec-h b{background:var(--orange-soft);color:var(--orange)}
+.psec-nfe .psec-h{border-color:var(--blue)} .psec-nfe .psec-h b{background:var(--blue-soft);color:var(--blue)}
+.psec-sem .psec-h{border-color:var(--red)} .psec-sem .psec-h b{background:var(--red-soft);color:var(--red)}
 @media (min-width:1000px){.patio-grid{grid-template-columns:250px minmax(0,1fr)}.resumo{position:sticky;top:calc(env(safe-area-inset-top,0px) + 112px);align-self:start;max-height:calc(100vh - 130px);overflow:auto}}
 .resumo{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;display:grid;gap:12px;align-content:start}
 .resumo h3{margin:0;font-family:var(--f-display);font-size:15px;text-transform:uppercase;letter-spacing:.05em;display:flex;justify-content:space-between;align-items:baseline}
@@ -304,7 +314,7 @@ dialog::backdrop{background:rgba(15,18,12,.55)}
       <aside class="resumo" id="resumo" aria-label="Resumo do pátio"></aside>
       <div class="patio-main">
         <div class="filters"><select class="selsm" id="pt-prod" aria-label="Filtrar por produto"><option value="">Todos os produtos</option></select><span class="count" id="pt-grupo-tag"></span></div>
-        <div id="patio-cards" class="cards"></div>
+        <div id="patio-cards" class="secs"></div>
       </div>
     </div>
     <div class="sec-h"><h2>Saíram hoje</h2><span class="sub" id="hoje-sub"></span></div>
@@ -634,7 +644,7 @@ function renderPatio(){
   if(!S.loaded) box.innerHTML=`<div class="empty"><strong>Carregando o pátio…</strong>Lendo a planilha da guarita.</div>`;
   else if(!open.length && (S.ptProd||S.ptGrupo)) box.innerHTML=`<div class="empty"><strong>Nenhum caminhão de ${esc(S.ptGrupo?S.ptGrupo.slice(2):S.ptProd)} no pátio</strong>Escolha <b>Todos os produtos</b> para ver os outros.</div>`;
   else if(!open.length) box.innerHTML=`<div class="empty"><strong>Pátio vazio</strong>Quando um caminhão chegar, toque em <b>+ Nova chegada</b> e registre a placa.</div>`;
-  else box.innerHTML = open.map(d=>{
+  const card = d=>{
     const fl=issues(d); const fq=filaPos[d.id];
     return `<article class="card${fl.length?" alert":""}${S.busy.has(d.id)?" busy":""}${fq?" has-fila":""}${d.status==="SEM ORDEM"?" semordem":""}">
       <div class="c-top">${plate(d.placa)}<div class="c-who"><strong>${esc(d.motorista)}</strong><span>${esc(d.transportadora)}</span></div>${pill(d.status)}</div>
@@ -650,7 +660,16 @@ function renderPatio(){
       <div class="acts">${cardActs(d)}</div>
       ${fq?`<span class="fila-geral" title="Ordem de chegada entre todos que aguardam entrada">${fq.g}º geral</span>`:""}
     </article>`;
-  }).join("");
+  };
+  const ts = d=>d.entrada||d.chegada||0;
+  const SECS=[
+    {k:"fila", t:"Aguardando entrada", h:"fila por ordem de chegada", f:d=>d.status==="PATIO", o:(a,b)=>(a.chegada||0)-(b.chegada||0)},
+    {k:"dentro", t:"Dentro da fazenda", h:"carregando ou descarregando", f:d=>d.status==="CARREGANDO"||d.status==="DESCARREGANDO", o:(a,b)=>ts(a)-ts(b)},
+    {k:"nfe", t:"Aguardando NF-e", h:"prontos para liberar quando a nota chegar", f:d=>d.status==="AGUARDANDO NFE", o:(a,b)=>ts(a)-ts(b)},
+    {k:"sem", t:"Sem ordem", h:"esperando ordem de carregamento", f:d=>d.status==="SEM ORDEM", o:(a,b)=>(a.chegada||0)-(b.chegada||0)}
+  ];
+  if(S.loaded && open.length) box.innerHTML = SECS.map(s=>{ const l=open.filter(s.f).sort(s.o); if(!l.length) return "";
+    return `<section class="psec psec-${s.k}"><div class="psec-h"><h3>${s.t}</h3><b>${l.length}</b><span>${s.h}</span></div><div class="cards">${l.map(card).join("")}</div></section>`; }).join("");
   const aguard = open.filter(d=>d.status==="PATIO").length;
   $("#patio-sub").textContent = open.length ? `${open.length} veículo${open.length>1?"s":""}${S.ptGrupo?" de "+S.ptGrupo.slice(2):S.ptProd?" de "+S.ptProd:""} · ${aguard} aguardando entrada` : "";
   const sod=startOfDay();
