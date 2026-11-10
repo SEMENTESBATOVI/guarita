@@ -53,7 +53,7 @@ body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:1
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
 button,input,select,textarea{font:inherit;color:inherit}
 :focus-visible{outline:3px solid var(--orange);outline-offset:2px}
-.wrap{max-width:1280px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1680px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 
 /* Cabeçalho */
 header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
@@ -99,7 +99,9 @@ main{padding-block:16px 40px}
 .s-AGUARDANDO_NFE{background:var(--blue-soft);color:var(--blue)}
 .s-CARREGANDO,.s-DESCARREGANDO{background:var(--orange-soft);color:var(--orange)}
 .s-LIBERADO{background:var(--green-soft);color:var(--green)}
-.s-FOI_EMBORA,.s-DESISTIU,.s-SEM_ORDEM,.s-OUTRO{background:var(--sunk);color:var(--muted)}
+.s-FOI_EMBORA,.s-DESISTIU,.s-OUTRO{background:var(--sunk);color:var(--muted)}
+.s-SEM_ORDEM{background:var(--red-soft);color:var(--red)}
+.card.semordem{border-style:dashed;border-color:var(--red)}
 
 /* Cartões do pátio */
 .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
@@ -242,6 +244,8 @@ dialog::backdrop{background:rgba(15,18,12,.55)}
 .rl span{font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rl b{font-family:var(--f-display);font-size:20px;line-height:1;font-variant-numeric:tabular-nums}
 .rl small{grid-column:1/-1;font-size:11px;color:var(--muted)}
+.rl-sem{background:var(--red-soft);color:var(--red)}
+.rl-sem small{color:var(--red)}
 .resumo .vazio{font-size:13px;color:var(--muted);padding:0 8px}
 .resumo .lim{border:0;background:none;color:var(--orange);font-weight:600;cursor:pointer;padding:0 8px;text-align:left;font-size:13px;text-decoration:underline;text-underline-offset:2px}
 @media (max-width:999px){.resumo .grp{grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:4px}.rl{border:1px solid var(--line)}}
@@ -330,6 +334,7 @@ dialog::backdrop{background:rgba(15,18,12,.55)}
           <select id="f-fin" required></select>
         </div>
       </div>
+      <label class="inline" for="f-semordem" style="font-weight:600;cursor:pointer"><input type="checkbox" id="f-semordem" style="width:22px;height:22px"> Chegou <b>sem ordem</b> de carregamento</label>
       <div class="field">
         <label for="f-obs">Observação (opcional)</label>
         <textarea id="f-obs" placeholder="Pedido, NF, nº da ordem…"></textarea>
@@ -456,7 +461,8 @@ function issues(d){
   if(d.saida && d.chegada && d.saida<d.chegada) out.push("Saída antes da chegada");
   else if(d.saida && d.entrada && d.saida<d.entrada) out.push("Saída antes da entrada");
   if(d.status==="LIBERADO" && !d.saida) out.push("Liberado sem horário de saída");
-  if(isOpen(d) && d.chegada && Date.now()-d.chegada>48*3600e3) out.push("No pátio há mais de 48 h");
+  if((d.status==="PATIO"||d.status==="SEM ORDEM") && d.chegada && Date.now()-d.chegada>48*3600e3) out.push("Esperando há mais de 48 h");
+  if((d.status==="CARREGANDO"||d.status==="DESCARREGANDO") && d.entrada && Date.now()-d.entrada>24*3600e3) out.push("Dentro há mais de 24 h");
   return out;
 }
 
@@ -596,9 +602,13 @@ function render(){
 }
 function cardActs(d){
   const a=[];
-  if(d.status==="PATIO"||d.status==="SEM ORDEM"){
+  if(d.status==="SEM ORDEM"){
+    a.push(`<button class="btn primary grow" data-act="ordem" data-id="${esc(d.id)}">Ordem chegou</button>`);
+    a.push(`<button class="btn" data-act="entrou" data-id="${esc(d.id)}">Entrou</button>`);
+    a.push(`<button class="btn ghost" data-act="foiembora" data-id="${esc(d.id)}">Foi embora</button>`);
+  } else if(d.status==="PATIO"){
     a.push(`<button class="btn primary grow" data-act="entrou" data-id="${esc(d.id)}">Entrou</button>`);
-    a.push(`<button class="btn" data-act="nfe" data-id="${esc(d.id)}">Aguard. NF-e</button>`);
+    a.push(`<button class="btn" data-act="semordem" data-id="${esc(d.id)}">Sem ordem</button>`);
     a.push(`<button class="btn ghost" data-act="desistiu" data-id="${esc(d.id)}">Desistiu</button>`);
   } else if(d.status==="AGUARDANDO NFE"){
     a.push(`<button class="btn go grow" data-act="liberar" data-id="${esc(d.id)}">Liberar saída</button>`);
@@ -614,19 +624,19 @@ function renderPatio(){
   const now=Date.now();
   if(typeof fillProdSel==="function") fillProdSel($("#pt-prod"), "ptProd");
   renderResumo();
-  const doProd = d => (!S.ptProd || produto(d.finalidade)===S.ptProd) && (!S.ptGrupo || (g=>g.tipo+":"+g.nome)(grupoResumo(d))===S.ptGrupo);
+  const doProd = d => (!S.ptProd || produto(d.finalidade)===S.ptProd) && (!S.ptGrupo || (S.ptGrupo==="S:SEM ORDEM" ? d.status==="SEM ORDEM" : (g=>g.tipo+":"+g.nome)(grupoResumo(d))===S.ptGrupo));
   const open = S.docs.filter(isOpen).filter(doProd).sort((a,b)=>(a.chegada||0)-(b.chegada||0));
   const box=$("#patio-cards");
   // Ordem de chegada de quem ainda espera entrar (geral e por produto)
   const filaPos={}; const porProd={};
-  S.docs.filter(d=>d.status==="PATIO"||d.status==="SEM ORDEM").sort((a,b)=>(a.chegada||0)-(b.chegada||0)||String(a.id).localeCompare(String(b.id)))
+  S.docs.filter(d=>d.status==="PATIO").sort((a,b)=>(a.chegada||0)-(b.chegada||0)||String(a.id).localeCompare(String(b.id)))
     .forEach((d,i)=>{ const pr=produto(d.finalidade); porProd[pr]=(porProd[pr]||0)+1; filaPos[d.id]={g:i+1, p:porProd[pr], prod:pr}; });
   if(!S.loaded) box.innerHTML=`<div class="empty"><strong>Carregando o pátio…</strong>Lendo a planilha da guarita.</div>`;
   else if(!open.length && (S.ptProd||S.ptGrupo)) box.innerHTML=`<div class="empty"><strong>Nenhum caminhão de ${esc(S.ptGrupo?S.ptGrupo.slice(2):S.ptProd)} no pátio</strong>Escolha <b>Todos os produtos</b> para ver os outros.</div>`;
   else if(!open.length) box.innerHTML=`<div class="empty"><strong>Pátio vazio</strong>Quando um caminhão chegar, toque em <b>+ Nova chegada</b> e registre a placa.</div>`;
   else box.innerHTML = open.map(d=>{
     const fl=issues(d); const fq=filaPos[d.id];
-    return `<article class="card${fl.length?" alert":""}${S.busy.has(d.id)?" busy":""}${fq?" has-fila":""}">
+    return `<article class="card${fl.length?" alert":""}${S.busy.has(d.id)?" busy":""}${fq?" has-fila":""}${d.status==="SEM ORDEM"?" semordem":""}">
       <div class="c-top">${plate(d.placa)}<div class="c-who"><strong>${esc(d.motorista)}</strong><span>${esc(d.transportadora)}</span></div>${pill(d.status)}</div>
       <div class="c-fin">${esc(d.finalidade)}</div>
       ${fq?`<div class="fila" title="Ordem de chegada de ${esc(fq.prod)} entre os que aguardam entrada"><span class="fila-p"><b>${fq.p}º</b> de ${esc(fq.prod)}</span></div>`:""}
@@ -756,12 +766,14 @@ S.ptGrupo = ls.get("guarita.ptgrupo")||"";
 function renderResumo(){
   const open=S.docs.filter(isOpen);
   const m={C:new Map(),D:new Map(),O:new Map()};
-  open.forEach(d=>{ const g=grupoResumo(d); const k=g.tipo+":"+g.nome; const x=m[g.tipo].get(k)||{nome:g.nome,t:0,a:0,i:0,n:0}; x.t++; if(d.status==="PATIO"||d.status==="SEM ORDEM") x.a++; else if(d.status==="AGUARDANDO NFE") x.n++; else x.i++; m[g.tipo].set(k,x); });
-  if(S.ptGrupo && ![...m.C.keys(),...m.D.keys(),...m.O.keys()].includes(S.ptGrupo)){ S.ptGrupo=""; ls.set("guarita.ptgrupo",""); }
+  open.forEach(d=>{ const g=grupoResumo(d); const k=g.tipo+":"+g.nome; const x=m[g.tipo].get(k)||{nome:g.nome,t:0,a:0,i:0,n:0}; x.t++; if(d.status==="SEM ORDEM") x.s=(x.s||0)+1; else if(d.status==="PATIO") x.a++; else if(d.status==="AGUARDANDO NFE") x.n++; else x.i++; m[g.tipo].set(k,x); });
+  if(S.ptGrupo && S.ptGrupo!=="S:SEM ORDEM" && ![...m.C.keys(),...m.D.keys(),...m.O.keys()].includes(S.ptGrupo)){ S.ptGrupo=""; ls.set("guarita.ptgrupo",""); }
   const linhas=(mp)=>[...mp.entries()].sort((a,b)=>b[1].t-a[1].t||a[1].nome.localeCompare(b[1].nome)).map(([k,x])=>
-    `<button type="button" class="rl" data-grupo="${esc(k)}" aria-pressed="${S.ptGrupo===k}"><span>${esc(x.nome)}</span><b>${x.t}</b><small>${[x.a?x.a+" aguardando":"",x.i?x.i+" dentro":"",x.n?x.n+" aguard. NF-e":""].filter(Boolean).join(" · ")}</small></button>`).join("");
+    `<button type="button" class="rl" data-grupo="${esc(k)}" aria-pressed="${S.ptGrupo===k}"><span>${esc(x.nome)}</span><b>${x.t}</b><small>${[x.a?x.a+" aguardando":"",x.i?x.i+" dentro":"",x.n?x.n+" aguard. NF-e":"",x.s?x.s+" sem ordem":""].filter(Boolean).join(" · ")}</small></button>`).join("");
   const tot=mp=>[...mp.values()].reduce((s,x)=>s+x.t,0);
+  const sem=open.filter(d=>d.status==="SEM ORDEM").length;
   $("#resumo").innerHTML =
+    (sem?`<button type="button" class="rl rl-sem" data-grupo="S:SEM ORDEM" aria-pressed="${S.ptGrupo==="S:SEM ORDEM"}"><span>Sem ordem</span><b>${sem}</b><small>esperando ordem de carregamento</small></button>`:"")+
     `<div><h3>Carregar <b>${tot(m.C)}</b></h3><div class="grp">${m.C.size?linhas(m.C):`<div class="vazio">Nenhum no pátio.</div>`}</div></div>`+
     `<div><h3>Descarregar <b>${tot(m.D)}</b></h3><div class="grp">${m.D.size?linhas(m.D):`<div class="vazio">Nenhum no pátio.</div>`}</div></div>`+
     (m.O.size?`<div><h3>Outros <b>${tot(m.O)}</b></h3><div class="grp">${linhas(m.O)}</div></div>`:"")+
@@ -802,6 +814,9 @@ document.addEventListener("click", e=>{
     case "nfe": upd(d,{status:"AGUARDANDO NFE"}, `${d.placa} aguardando NF-e`); break;
     case "liberar": upd(d,{status:"LIBERADO", saida:now}, `${d.placa} liberado · permanência ${dur(now-(d.chegada||now))}`); break;
     case "desistiu": upd(d,{status:"DESISTIU", saida:now}, `${d.placa} marcado como desistiu`); break;
+    case "semordem": upd(d,{status:"SEM ORDEM"}, `${d.placa} marcado sem ordem`); break;
+    case "ordem": upd(d,{status:"PATIO"}, `${d.placa} com ordem: voltou para a fila`); break;
+    case "foiembora": upd(d,{status:"FOI EMBORA", saida:now}, `${d.placa} foi embora sem ordem`); break;
     case "editar": openEdit(d); break;
   }
 });
@@ -847,6 +862,7 @@ $("#form-nova").addEventListener("submit", async e=>{
   try{
     const j = await apiPost({acao:"criar", registro:{id:pendingId, placa:p, motorista:mot, transportadora:tr, finalidade:fin, obs, chegada:cheg}});
     putDoc(j.registro); pendingId=null;
+    if($("#f-semordem").checked){ try{ const j2=await apiPost({acao:"atualizar", id:j.registro.id, versao:j.registro.versao, campos:{status:"SEM ORDEM"}}); putDoc(j2.registro); }catch(e2){ toast("Chegada salva, mas não marcou sem ordem. Use o botão Sem ordem no cartão.", true); } }
     toast(`Chegada registrada · ${p} às ${hm(cheg)}`);
     e.target.reset(); finOptions($("#f-fin")); S.chegManual=false; S.dupArm=false;
     $("#f-cheg").hidden=true; $("#cheg-adj").hidden=false; $("#dup").hidden=true; resetPlacaHint(); tick();
