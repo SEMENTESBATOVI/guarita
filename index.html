@@ -477,24 +477,30 @@ function issues(d){
 }
 
 /* ---------- API ---------- */
+function fetchT(url, opt, ms){
+  const ac = new AbortController(); const tm = setTimeout(()=>ac.abort(), ms||20000);
+  return fetch(url, Object.assign({signal:ac.signal}, opt||{})).finally(()=>clearTimeout(tm));
+}
 async function apiGet(){
-  const r = await fetch(API+"?codigo="+encodeURIComponent(S.cod)+"&t="+Date.now(), {cache:"no-store"});
+  const r = await fetchT(API+"?codigo="+encodeURIComponent(S.cod)+"&t="+Date.now(), {cache:"no-store"}, 20000);
   if(!r.ok) throw {erro:"rede"};
   return r.json();
 }
 async function apiPost(body){
-  const r = await fetch(API, {method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify(Object.assign({codigo:S.cod, por:S.nome}, body))});
+  const r = await fetchT(API, {method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify(Object.assign({codigo:S.cod, por:S.nome}, body))}, 30000);
   if(!r.ok) throw {erro:"rede"};
   const j = await r.json();
   if(!j.ok) throw j;
   return j;
 }
 async function load(quiet){
-  if(S.loading || !S.cod) return; S.loading=true;
+  if(!S.cod) return; if(S.loading && Date.now()-S.loadingDesde<30000) return; S.loading=true; S.loadingDesde=Date.now();
   try{
     const j = await apiGet();
     if(!j.ok){ if(j.erro==="codigo"){ sair("O código de acesso mudou. Digite o código novo."); return; } throw j; }
-    if(!S.busy.size) S.docs = j.registros||[];
+    const novos = j.registros||[];
+    if(S.busy.size){ const loc={}; S.docs.forEach(d=>{ if(S.busy.has(d.id)) loc[d.id]=d; }); S.docs = novos.map(d=>loc[d.id]||d); Object.values(loc).forEach(d=>{ if(!S.docs.some(x=>x.id===d.id)) S.docs.push(d); }); }
+    else S.docs = novos;
     S.listas = j.listas||S.listas; S.dias = j.dias||S.dias;
     S.loaded=true; S.offline=false; S.lastOk=Date.now();
     fillListas(); render();
