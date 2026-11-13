@@ -368,7 +368,7 @@ dialog::backdrop{background:rgba(15,18,12,.55)}
           <select id="f-fin" required></select>
         </div>
       </div>
-      <label class="inline" for="f-semordem" style="font-weight:600;cursor:pointer"><input type="checkbox" id="f-semordem" style="width:22px;height:22px"> Chegou <b>sem ordem</b> de carregamento</label>
+      <label class="inline" for="f-semordem" id="f-semordem-l" hidden style="font-weight:600;cursor:pointer"><input type="checkbox" id="f-semordem" style="width:22px;height:22px"> Chegou <b>sem ordem</b> de carregamento</label>
       <div class="field">
         <label for="f-obs">Observação (opcional)</label>
         <textarea id="f-obs" placeholder="Pedido, NF, nº da ordem…"></textarea>
@@ -394,7 +394,7 @@ dialog::backdrop{background:rgba(15,18,12,.55)}
       <input class="search" id="h-q" type="search" placeholder="Buscar placa, motorista, transportadora…" aria-label="Buscar">
     </div>
     <div class="tablebox"><table>
-      <thead><tr><th>Chegada</th><th>Placa</th><th>Motorista</th><th>Transportadora</th><th>Finalidade</th><th>Entrada</th><th>Saída</th><th>Perm.</th><th>Status</th><th><span class="sr">Imprimir</span></th></tr></thead>
+      <thead><tr><th>Chegada</th><th>Placa</th><th>Motorista</th><th>Transportadora</th><th>Finalidade</th><th>Entrada</th><th>Fim carreg.</th><th>Saída</th><th>Perm.</th><th>Status</th><th><span class="sr">Imprimir</span></th></tr></thead>
       <tbody id="hist-body"></tbody>
     </table></div>
     <p class="count" id="hist-nota"></p>
@@ -434,6 +434,10 @@ dialog::backdrop{background:rgba(15,18,12,.55)}
     <div class="row2">
       <div class="field"><label for="e-cheg">Chegada</label><input id="e-cheg" type="datetime-local"></div>
       <div class="field"><label for="e-ent">Entrada</label><input id="e-ent" type="datetime-local"></div>
+    </div>
+    <div class="row2" id="e-nfe-row">
+      <div class="field"><label for="e-nfe">Fim do carregamento</label><input id="e-nfe" type="datetime-local"></div>
+      <div class="field"><label>Tempo carregando</label><div id="e-tcar" style="font-family:var(--f-display);font-size:24px;font-weight:700;padding-top:6px">–</div></div>
     </div>
     <div class="row2">
       <div class="field"><label for="e-sai">Saída</label><input id="e-sai" type="datetime-local"></div>
@@ -650,14 +654,14 @@ function cardActs(d){
     a.push(`<button class="btn ghost" data-act="foiembora" data-id="${esc(d.id)}">Foi embora</button>`);
   } else if(d.status==="PATIO"){
     a.push(`<button class="btn primary grow" data-act="entrou" data-id="${esc(d.id)}">Entrou</button>`);
-    a.push(`<button class="btn" data-act="semordem" data-id="${esc(d.id)}">Sem ordem</button>`);
+    if(isCarga(d.finalidade)) a.push(`<button class="btn" data-act="semordem" data-id="${esc(d.id)}">Sem ordem</button>`);
     a.push(`<button class="btn ghost" data-act="desistiu" data-id="${esc(d.id)}">Desistiu</button>`);
   } else if(d.status==="AGUARDANDO NFE"){
     a.push(`<button class="btn go grow" data-act="liberar" data-id="${esc(d.id)}">Liberar saída</button>`);
     a.push(`<button class="btn" data-act="entrou" data-id="${esc(d.id)}">${isCarga(d.finalidade)?"Voltou a carregar":"Voltou a descarregar"}</button>`);
   } else {
     a.push(`<button class="btn go grow" data-act="liberar" data-id="${esc(d.id)}">Liberar saída</button>`);
-    a.push(`<button class="btn" data-act="nfe" data-id="${esc(d.id)}">Aguard. NF-e</button>`);
+    if(isCarga(d.finalidade)) a.push(`<button class="btn" data-act="nfe" data-id="${esc(d.id)}">Fim carreg. · NF-e</button>`);
   }
   a.push(`<button class="btn ghost" data-act="editar" data-id="${esc(d.id)}" aria-label="Editar ${esc(d.placa)}">Editar</button>`);
   return a.join("");
@@ -685,6 +689,7 @@ function renderPatio(){
       <div class="c-times">
         <div>Chegou<b>${d.chegada && startOfDay(d.chegada)!==startOfDay(now)?dm(d.chegada)+" ":""}${d.chegada?hm(d.chegada):"–"}</b></div>
         <div>Entrou<b>${d.entrada?hm(d.entrada):"–"}</b></div>
+        ${d.nfe?`<div>Fim carreg.<b>${hm(d.nfe)}</b></div>`:""}
         <div class="elapsed">No pátio há<b>${d.chegada?dur(now-d.chegada):"–"}</b></div>
       </div>
       ${d.obs?`<div class="c-obs">${esc(d.obs)}</div>`:""}
@@ -734,9 +739,9 @@ function renderHist(){
     const fl=issues(d);
     return `<tr data-act="editar" data-id="${esc(d.id)}" title="${esc(fl.join(" · "))}">
       <td class="num">${dmhm(d.chegada)}</td><td>${plate(d.placa,true)}</td><td>${esc(d.motorista)}</td><td>${esc(d.transportadora)}</td>
-      <td>${esc(d.finalidade)}</td><td class="num">${d.entrada?dmhm(d.entrada):"–"}</td><td class="num">${d.saida?dmhm(d.saida):"–"}</td>
+      <td>${esc(d.finalidade)}</td><td class="num">${d.entrada?dmhm(d.entrada):"–"}</td><td class="num">${d.nfe?dmhm(d.nfe):"–"}</td><td class="num">${d.saida?dmhm(d.saida):"–"}</td>
       <td class="perm">${fl.length?`<span class="warnico" aria-label="${esc(fl.join(", "))}">⚠</span> `:""}${dur(perm(d))}</td><td>${pill(d.status)}</td><td class="prt-td"><button type="button" class="prt" data-act="imprimir" data-id="${esc(d.id)}" title="Imprimir ticket de ${esc(d.placa)}" aria-label="Imprimir ticket de ${esc(d.placa)}"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M6 14h12v7H6z"/><circle cx="17.5" cy="12" r=".6" fill="currentColor"/></svg></button></td></tr>`;
-  }).join("") : `<tr><td colspan="10" style="text-align:center;color:var(--muted);padding:24px">${S.loaded?"Nenhum registro neste filtro.":"Carregando…"}</td></tr>`;
+  }).join("") : `<tr><td colspan="11" style="text-align:center;color:var(--muted);padding:24px">${S.loaded?"Nenhum registro neste filtro.":"Carregando…"}</td></tr>`;
 }
 function bars(map, cls){
   const arr=[...map.entries()].sort((a,b)=>b[1]-a[1]).slice(0,8);
@@ -851,7 +856,8 @@ function imprimirTicket(d){
     <div class="tk-st">${esc(SLABEL[d.status]||d.status||"")}</div>
     <dl>${linha("Motorista",d.motorista)}${linha("Transportadora",d.transportadora)}${linha("Finalidade",d.finalidade)}</dl>
     <div class="tk-sep"></div>
-    <dl>${linha("Chegada",dataHora(d.chegada))}${linha("Entrada",d.entrada?dataHora(d.entrada):"–")}${linha("Saída",d.saida?dataHora(d.saida):"–")}</dl>
+    <dl>${linha("Chegada",dataHora(d.chegada))}${linha("Entrada",d.entrada?dataHora(d.entrada):"–")}${d.nfe?linha("Fim carreg.",dataHora(d.nfe)):""}${linha("Saída",d.saida?dataHora(d.saida):"–")}</dl>
+    ${d.nfe&&d.entrada&&d.nfe>=d.entrada?`<dl>${linha("Carregando",dur(d.nfe-d.entrada)+" h")}${d.saida&&d.saida>=d.nfe?linha("Espera NF-e",dur(d.saida-d.nfe)+" h"):""}</dl>`:""}
     <dl class="tk-big">${linha("Permanência",pm)}</dl>
     ${d.obs?`<div class="tk-sep"></div><div class="tk-obs"><b>OBS.:</b> ${esc(d.obs)}</div>`:""}
     <div class="tk-ass">Porteiro${S.nome?" · "+esc(S.nome):""}</div>
@@ -888,8 +894,8 @@ document.addEventListener("click", e=>{
   const d=byId(b.dataset.id); if(!d) return;
   const now=Date.now();
   switch(b.dataset.act){
-    case "entrou": upd(d,{status:isCarga(d.finalidade)?"CARREGANDO":"DESCARREGANDO", entrada:d.entrada||now}, `${d.placa} entrou · ${hm(d.entrada||now)}`); break;
-    case "nfe": upd(d,{status:"AGUARDANDO NFE"}, `${d.placa} aguardando NF-e`); break;
+    case "entrou": upd(d, Object.assign({status:isCarga(d.finalidade)?"CARREGANDO":"DESCARREGANDO", entrada:d.entrada||now}, d.status==="AGUARDANDO NFE"?{nfe:null}:{}), d.status==="AGUARDANDO NFE"?`${d.placa} voltou a carregar`:`${d.placa} entrou · ${hm(d.entrada||now)}`); break;
+    case "nfe": upd(d,{status:"AGUARDANDO NFE", nfe:now}, `${d.placa} terminou de carregar · ${hm(now)} · aguardando NF-e`); break;
     case "liberar": upd(d,{status:"LIBERADO", saida:now}, `${d.placa} liberado · permanência ${dur(now-(d.chegada||now))}`); break;
     case "desistiu": upd(d,{status:"DESISTIU", saida:now}, `${d.placa} marcado como desistiu`); break;
     case "semordem": upd(d,{status:"SEM ORDEM"}, `${d.placa} marcado sem ordem`); break;
@@ -919,6 +925,7 @@ fPlaca.addEventListener("input", ()=>{
   const aberto=S.docs.find(d=>d.placa===p && isOpen(d));
   if(aberto){ dup.hidden=false; dup.textContent=`${p} já está no pátio desde ${dmhm(aberto.chegada)} (${SLABEL[aberto.status]}). Se for outra viagem, toque de novo em registrar.`; }
 });
+$("#f-fin").addEventListener("change", e=>{ const c=isCarga(e.target.value); $("#f-semordem-l").hidden=!c; if(!c) $("#f-semordem").checked=false; });
 $("#cheg-adj").addEventListener("click", ()=>{
   S.chegManual=true; const i=$("#f-cheg"); i.hidden=false; i.value=toLocalInput(Date.now());
   $("#cheg-txt").textContent="Horário informado:"; $("#cheg-adj").hidden=true; i.focus();
@@ -943,7 +950,7 @@ $("#form-nova").addEventListener("submit", async e=>{
     putDoc(j.registro); pendingId=null;
     if($("#f-semordem").checked){ try{ const j2=await apiPost({acao:"atualizar", id:j.registro.id, versao:j.registro.versao, campos:{status:"SEM ORDEM"}}); putDoc(j2.registro); }catch(e2){ toast("Chegada salva, mas não marcou sem ordem. Use o botão Sem ordem no cartão.", true); } }
     toast(`Chegada registrada · ${p} às ${hm(cheg)}`);
-    e.target.reset(); finOptions($("#f-fin")); S.chegManual=false; S.dupArm=false;
+    e.target.reset(); finOptions($("#f-fin")); $("#f-semordem-l").hidden=true; S.chegManual=false; S.dupArm=false;
     $("#f-cheg").hidden=true; $("#cheg-adj").hidden=false; $("#dup").hidden=true; resetPlacaHint(); tick();
     setTab("patio");
   }catch(err){ toast(errMsg(err), true); if(err && err.erro==="validacao") pendingId=null; }
@@ -957,8 +964,8 @@ let qT; $("#h-q").addEventListener("input", e=>{ clearTimeout(qT); qT=setTimeout
 $("#btn-csv").addEventListener("click", ()=>{
   const br = t => { if(!t) return ""; const d=F(t); return pad(d.getUTCDate())+"/"+pad(d.getUTCMonth()+1)+"/"+d.getUTCFullYear(); };
   const cell = v => `"${String(v??"").replace(/"/g,'""')}"`;
-  const head=["DATA CHEGADA","HORA CHEGADA","STATUS","PLACA","MOTORISTA","TRANSPORTADORA","FINALIDADE","DATA ENTRADA","HORA ENTRADA","DATA SAÍDA","HORA SAÍDA","PERMANÊNCIA","OBSERVAÇÃO","CONFERIR"];
-  const lines=[head.join(";")].concat(histRows().slice().reverse().map(d=>[br(d.chegada),d.chegada?hm(d.chegada):"",d.status,d.placa,d.motorista,d.transportadora,d.finalidade,br(d.entrada),d.entrada?hm(d.entrada):"",br(d.saida),d.saida?hm(d.saida):"",perm(d)!=null?dur(perm(d)):"",d.obs,issues(d).join(" / ")].map(cell).join(";")));
+  const head=["DATA CHEGADA","HORA CHEGADA","STATUS","PLACA","MOTORISTA","TRANSPORTADORA","FINALIDADE","DATA ENTRADA","HORA ENTRADA","DATA FIM CARREG.","HORA FIM CARREG.","DATA SAÍDA","HORA SAÍDA","PERMANÊNCIA","OBSERVAÇÃO","CONFERIR"];
+  const lines=[head.join(";")].concat(histRows().slice().reverse().map(d=>[br(d.chegada),d.chegada?hm(d.chegada):"",d.status,d.placa,d.motorista,d.transportadora,d.finalidade,br(d.entrada),d.entrada?hm(d.entrada):"",br(d.nfe),d.nfe?hm(d.nfe):"",br(d.saida),d.saida?hm(d.saida):"",perm(d)!=null?dur(perm(d)):"",d.obs,issues(d).join(" / ")].map(cell).join(";")));
   const now=F(Date.now());
   const blob=new Blob(["﻿"+lines.join("\r\n")],{type:"text/csv;charset=utf-8"});
   const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
@@ -968,15 +975,16 @@ $("#btn-csv").addEventListener("click", ()=>{
 
 /* ---------- edição ---------- */
 const dlg=$("#dlg");
-function calcPerm(){ const c=fromLocalInput($("#e-cheg").value), s=fromLocalInput($("#e-sai").value); $("#e-perm").textContent = (c&&s&&s>=c)?dur(s-c):"–"; }
-["#e-cheg","#e-sai"].forEach(s=>$(s).addEventListener("input",calcPerm));
+function calcPerm(){ const c=fromLocalInput($("#e-cheg").value), s=fromLocalInput($("#e-sai").value), en=fromLocalInput($("#e-ent").value), nf=fromLocalInput($("#e-nfe").value); $("#e-perm").textContent = (c&&s&&s>=c)?dur(s-c):"–"; $("#e-tcar").textContent = (en&&nf&&nf>=en)?dur(nf-en):"–"; }
+["#e-cheg","#e-sai","#e-ent","#e-nfe"].forEach(s=>$(s).addEventListener("input",calcPerm));
+$("#e-fin").addEventListener("change", e=>{ $("#e-nfe-row").hidden = !isCarga(e.target.value) && !$("#e-nfe").value; });
 function openEdit(d){
   S.editing=d.id; S.delArm=false; $("#ed-del").textContent="Excluir";
   $("#ed-plate").innerHTML=plate(d.placa,true);
   $("#e-placa").value=d.placa||""; $("#e-status").value=STATUS.includes(d.status)?d.status:"OUTRO";
   $("#e-mot").value=d.motorista||""; $("#e-transp").value=d.transportadora||"";
   finOptions($("#e-fin"), d.finalidade);
-  $("#e-cheg").value=toLocalInput(d.chegada); $("#e-ent").value=toLocalInput(d.entrada); $("#e-sai").value=toLocalInput(d.saida);
+  $("#e-cheg").value=toLocalInput(d.chegada); $("#e-ent").value=toLocalInput(d.entrada); $("#e-sai").value=toLocalInput(d.saida); $("#e-nfe").value=toLocalInput(d.nfe); $("#e-nfe-row").hidden = !isCarga(d.finalidade) && !d.nfe;
   $("#e-obs").value=d.obs||""; calcPerm();
   const fl=issues(d); const er=$("#ed-err"); er.hidden=!fl.length; er.textContent=fl.length?"Conferir: "+fl.join(" · "):"";
   $("#ed-meta").textContent = d.atualizadoEm ? `Última alteração: ${d.atualizadoPor||"—"} em ${dmhm(d.atualizadoEm)}` : "";
@@ -988,18 +996,21 @@ $("#form-ed").addEventListener("submit", async e=>{
   e.preventDefault();
   const d=byId(S.editing); if(!d) return;
   const p=normPlaca($("#e-placa").value);
-  const c=fromLocalInput($("#e-cheg").value), en=fromLocalInput($("#e-ent").value), sa=fromLocalInput($("#e-sai").value);
+  const c=fromLocalInput($("#e-cheg").value), en=fromLocalInput($("#e-ent").value), sa=fromLocalInput($("#e-sai").value), nf=$("#e-nfe-row").hidden?null:fromLocalInput($("#e-nfe").value);
   const st=$("#e-status").value; const er=$("#ed-err");
   const bad = !placaOk(p)?"Placa fora do padrão (ABC1D23 ou ABC1234).":
     !c?"Informe a chegada.":
     (en&&en<c)?"A entrada não pode ser antes da chegada.":
     (sa&&sa<c)?"A saída não pode ser antes da chegada.":
     (sa&&en&&sa<en)?"A saída não pode ser antes da entrada.":
+    (nf&&en&&nf<en)?"O fim do carregamento não pode ser antes da entrada.":
+    (nf&&sa&&nf>sa)?"O fim do carregamento não pode ser depois da saída.":
+    (nf&&nf<c)?"O fim do carregamento não pode ser antes da chegada.":
     (st==="LIBERADO"&&!sa)?"Para status Liberado, informe a saída.":
     (OPEN.has(st)&&sa)?"Veículo no pátio não tem saída. Apague a saída ou mude o status.":"";
   if(bad){ er.hidden=false; er.textContent=bad; return; }
   closeEdit();
-  await upd(d,{placa:p, status:st, motorista:$("#e-mot").value.trim().toUpperCase(), transportadora:$("#e-transp").value.trim().toUpperCase(), finalidade:$("#e-fin").value, chegada:c, entrada:en, saida:sa, obs:$("#e-obs").value.trim()}, "Registro atualizado");
+  await upd(d,{placa:p, status:st, motorista:$("#e-mot").value.trim().toUpperCase(), transportadora:$("#e-transp").value.trim().toUpperCase(), finalidade:$("#e-fin").value, chegada:c, entrada:en, saida:sa, nfe:nf, obs:$("#e-obs").value.trim()}, "Registro atualizado");
 });
 $("#ed-del").addEventListener("click", async ()=>{
   if(!S.delArm){ S.delArm=true; $("#ed-del").textContent="Toque de novo para excluir"; return; }
