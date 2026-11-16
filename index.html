@@ -184,7 +184,7 @@ td .warnico{color:var(--red);font-weight:700}
 .kpi span{font-size:12px;color:var(--muted)}
 .kpi.hl{background:var(--yellow);border-color:var(--yellow);color:#3A3200}
 .kpi.hl small,.kpi.hl span{color:#5A4E00}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
 @media (max-width:720px){.grid2{grid-template-columns:1fr}}
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;display:grid;gap:10px;min-width:0}
 .panel h3{margin:0;font-family:var(--f-display);font-size:17px;text-transform:uppercase;letter-spacing:.04em}
@@ -224,6 +224,7 @@ dialog::backdrop{background:rgba(15,18,12,.55)}
 .logo-login{height:64px;width:auto;display:block}
 @media (max-width:460px){.logo{height:32px}}
 .fila{display:flex;gap:6px;flex-wrap:wrap}
+.c-emp{color:var(--orange);font-weight:700}
 .fila span{display:inline-flex;align-items:baseline;gap:4px;font-size:13px;font-weight:600;border-radius:8px;padding:3px 9px;color:var(--ink);background:var(--sunk)}
 .fila b{font-family:var(--f-display);font-size:20px;line-height:1}
 .fila .fila-p{background:var(--orange-soft);color:var(--orange)}
@@ -368,6 +369,12 @@ dialog::backdrop{background:rgba(15,18,12,.55)}
           <select id="f-fin" required></select>
         </div>
       </div>
+      <div class="field">
+        <label for="f-emp">Empresa</label>
+        <input id="f-emp" list="dl-emp" autocomplete="off" autocapitalize="characters" placeholder="Ex.: LDC, COFCO, YARA…">
+        <datalist id="dl-emp"></datalist>
+        <span class="hint">Carregar: quem compra. Descarregar: quem mandou o produto. Pode ficar em branco.</span>
+      </div>
       <label class="inline" for="f-semordem" id="f-semordem-l" hidden style="font-weight:600;cursor:pointer"><input type="checkbox" id="f-semordem" style="width:22px;height:22px"> Chegou <b>sem ordem</b> de carregamento</label>
       <div class="field">
         <label for="f-obs">Observação (opcional)</label>
@@ -391,10 +398,11 @@ dialog::backdrop{background:rgba(15,18,12,.55)}
       <button class="chip" data-range="mes" aria-pressed="false">Este mês</button>
       <button class="chip" data-range="tudo" aria-pressed="false">Tudo</button>
       <select class="selsm" id="h-status" aria-label="Filtrar status"><option value="">Todos os status</option></select>
+      <select class="selsm" id="h-emp" aria-label="Filtrar empresa"><option value="">Todas as empresas</option></select>
       <input class="search" id="h-q" type="search" placeholder="Buscar placa, motorista, transportadora…" aria-label="Buscar">
     </div>
     <div class="tablebox"><table>
-      <thead><tr><th>Chegada</th><th>Placa</th><th>Motorista</th><th>Transportadora</th><th>Finalidade</th><th>Entrada</th><th>Fim carreg.</th><th>Saída</th><th>Perm.</th><th>Status</th><th><span class="sr">Imprimir</span></th></tr></thead>
+      <thead><tr><th>Chegada</th><th>Placa</th><th>Motorista</th><th>Transportadora</th><th>Finalidade</th><th>Empresa</th><th>Entrada</th><th>Fim carreg.</th><th>Saída</th><th>Perm.</th><th>Status</th><th><span class="sr">Imprimir</span></th></tr></thead>
       <tbody id="hist-body"></tbody>
     </table></div>
     <p class="count" id="hist-nota"></p>
@@ -404,6 +412,7 @@ dialog::backdrop{background:rgba(15,18,12,.55)}
     <div class="sec-h"><h2>Painel da guarita</h2><span class="sub" id="painel-sub"></span></div>
     <div class="filters">
       <select class="selsm" id="p-prod" aria-label="Produto"><option value="">Todos os produtos</option></select>
+      <select class="selsm" id="p-emp" aria-label="Empresa"><option value="">Todas as empresas</option></select>
       <button class="chip" data-prange="hoje" aria-pressed="false">Hoje</button>
       <button class="chip" data-prange="7" aria-pressed="false">7 dias</button>
       <button class="chip" data-prange="mes" aria-pressed="true">Este mês</button>
@@ -413,6 +422,7 @@ dialog::backdrop{background:rgba(15,18,12,.55)}
     <div class="panel" id="conferir"></div>
     <div class="grid2">
       <div class="panel"><h3 id="h-bprod">Produtos no período</h3><div class="bars" id="b-fin"></div></div>
+      <div class="panel"><h3>Empresas no período</h3><div class="bars" id="b-emp"></div></div>
       <div class="panel"><h3>Transportadoras no período</h3><div class="bars" id="b-tr"></div></div>
     </div>
   </section>
@@ -431,6 +441,7 @@ dialog::backdrop{background:rgba(15,18,12,.55)}
       <div class="field"><label for="e-transp">Transportadora</label><input id="e-transp" list="dl-transp" autocapitalize="characters"></div>
       <div class="field"><label for="e-fin">Finalidade</label><select id="e-fin"></select></div>
     </div>
+    <div class="field"><label for="e-emp">Empresa</label><input id="e-emp" list="dl-emp" autocapitalize="characters" placeholder="Cliente ou fornecedor"></div>
     <div class="row2">
       <div class="field"><label for="e-cheg">Chegada</label><input id="e-cheg" type="datetime-local"></div>
       <div class="field"><label for="e-ent">Entrada</label><input id="e-ent" type="datetime-local"></div>
@@ -492,6 +503,8 @@ const sClass = s => "s-"+String(s||"OUTRO").replace(/ /g,"_");
 const pill = s => `<span class="pill ${sClass(s)}">${esc(SLABEL[s]||s||"Sem status")}</span>`;
 const plate = (p,sm) => `<span class="plate${sm?" sm":""}"><b>BRASIL</b><span>${esc(p)}</span></span>`;
 const isCarga = f => String(f||"").startsWith("CARREG");
+// Empresa: campo próprio; nos registros antigos vem no fim da finalidade (CARREGAR SOJA LDC)
+const empresaDe = d => String(d.empresa||"").trim() || ((m=>m?m[2]:"")(String(d.finalidade||"").toUpperCase().match(/^CARREG\w*\s+(SOJA|MILHO)\s+(.+)$/)));
 const ls = { get(k){ try{ return localStorage.getItem(k)||""; }catch(e){ return ""; } }, set(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }, del(k){ try{ localStorage.removeItem(k); }catch(e){} } };
 
 function issues(d){
@@ -594,10 +607,18 @@ function finOptions(sel, current){
   if(current && !fins.includes(current)) h += `<optgroup label="Fora da lista"><option selected>${esc(current)}</option></optgroup>`;
   sel.innerHTML = h;
 }
+function fillEmpSel(sel,key){
+  if(!sel) return; const cur=S[key]||"";
+  const es=new Set(S.listas.empresas||[]); S.docs.forEach(d=>{ const e=empresaDe(d); if(e) es.add(e); });
+  sel.innerHTML=`<option value="">Todas as empresas</option>`+[...es].sort().map(e=>`<option ${e===cur?"selected":""}>${esc(e)}</option>`).join("");
+}
 function fillListas(){
   const set = new Set(S.listas.transportadoras||[]);
   S.docs.forEach(d=>d.transportadora && set.add(d.transportadora));
   $("#dl-transp").innerHTML = [...set].sort().map(t=>`<option value="${esc(t)}">`).join("");
+  const es = new Set(S.listas.empresas||[]); S.docs.forEach(d=>{ const e=empresaDe(d); if(e) es.add(e); });
+  $("#dl-emp").innerHTML = [...es].sort().map(t=>`<option value="${esc(t)}">`).join("");
+  fillEmpSel($("#h-emp"),"hEmp"); fillEmpSel($("#p-emp"),"pEmp");
   const keep=$("#f-fin").value; finOptions($("#f-fin"), keep||undefined);
 }
 $("#h-status").innerHTML += STATUS.map(s=>`<option value="${esc(s)}">${esc(SLABEL[s])}</option>`).join("");
@@ -684,7 +705,7 @@ function renderPatio(){
     const fl=issues(d); const fq=filaPos[d.id];
     return `<article class="card${fl.length?" alert":""}${S.busy.has(d.id)?" busy":""}${fq?" has-fila":""}${d.status==="SEM ORDEM"?" semordem":""}">
       <div class="c-top">${plate(d.placa)}<div class="c-who"><strong>${esc(d.motorista)}</strong><span>${esc(d.transportadora)}</span></div>${pill(d.status)}</div>
-      <div class="c-fin">${esc(d.finalidade)}</div>
+      <div class="c-fin">${esc(d.finalidade)}${d.empresa?` · <span class="c-emp">${esc(d.empresa)}</span>`:""}</div>
       ${fq?`<div class="fila" title="Ordem de chegada de ${esc(fq.prod)} entre os que aguardam entrada"><span class="fila-p"><b>${fq.p}º</b> de ${esc(fq.prod)}</span></div>`:""}
       <div class="c-times">
         <div>Chegou<b>${d.chegada && startOfDay(d.chegada)!==startOfDay(now)?dm(d.chegada)+" ":""}${d.chegada?hm(d.chegada):"–"}</b></div>
@@ -726,10 +747,12 @@ function histRows(){
   const q=S.q.trim().toUpperCase();
   return S.docs.filter(d=>(d.chegada||0)>=from)
     .filter(d=>!S.st || d.status===S.st)
-    .filter(d=>!q || [d.placa,d.motorista,d.transportadora,d.finalidade,d.obs].join(" ").toUpperCase().includes(q))
+    .filter(d=>!S.hEmp || empresaDe(d)===S.hEmp)
+    .filter(d=>!q || [d.placa,d.motorista,d.transportadora,d.finalidade,empresaDe(d),d.obs].join(" ").toUpperCase().includes(q))
     .sort((a,b)=>(b.chegada||0)-(a.chegada||0));
 }
 function renderHist(){
+  fillEmpSel($("#h-emp"),"hEmp");
   const rows=histRows();
   $("#hist-count").textContent = `${rows.length} registro${rows.length===1?"":"s"}`;
   document.querySelectorAll("[data-range]").forEach(b=>b.setAttribute("aria-pressed", String(b.dataset.range===S.range)));
@@ -739,9 +762,9 @@ function renderHist(){
     const fl=issues(d);
     return `<tr data-act="editar" data-id="${esc(d.id)}" title="${esc(fl.join(" · "))}">
       <td class="num">${dmhm(d.chegada)}</td><td>${plate(d.placa,true)}</td><td>${esc(d.motorista)}</td><td>${esc(d.transportadora)}</td>
-      <td>${esc(d.finalidade)}</td><td class="num">${d.entrada?dmhm(d.entrada):"–"}</td><td class="num">${d.nfe?dmhm(d.nfe):"–"}</td><td class="num">${d.saida?dmhm(d.saida):"–"}</td>
+      <td>${esc(d.finalidade)}</td><td>${esc(empresaDe(d))}</td><td class="num">${d.entrada?dmhm(d.entrada):"–"}</td><td class="num">${d.nfe?dmhm(d.nfe):"–"}</td><td class="num">${d.saida?dmhm(d.saida):"–"}</td>
       <td class="perm">${fl.length?`<span class="warnico" aria-label="${esc(fl.join(", "))}">⚠</span> `:""}${dur(perm(d))}</td><td>${pill(d.status)}</td><td class="prt-td"><button type="button" class="prt" data-act="imprimir" data-id="${esc(d.id)}" title="Imprimir ticket de ${esc(d.placa)}" aria-label="Imprimir ticket de ${esc(d.placa)}"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M6 14h12v7H6z"/><circle cx="17.5" cy="12" r=".6" fill="currentColor"/></svg></button></td></tr>`;
-  }).join("") : `<tr><td colspan="11" style="text-align:center;color:var(--muted);padding:24px">${S.loaded?"Nenhum registro neste filtro.":"Carregando…"}</td></tr>`;
+  }).join("") : `<tr><td colspan="12" style="text-align:center;color:var(--muted);padding:24px">${S.loaded?"Nenhum registro neste filtro.":"Carregando…"}</td></tr>`;
 }
 function bars(map, cls){
   const arr=[...map.entries()].sort((a,b)=>b[1]-a[1]).slice(0,8);
@@ -779,12 +802,15 @@ function fillProdSel(sel, key){
 S.ptProd = ls.get("guarita.ptprod")||"";
 $("#pt-prod").addEventListener("change",e=>{ S.ptProd=e.target.value; ls.set("guarita.ptprod",S.ptProd); if(S.ptProd){ S.ptGrupo=""; ls.set("guarita.ptgrupo",""); } renderPatio(); });
 $("#p-prod").addEventListener("change",e=>{ S.pProd=e.target.value; ls.set("guarita.pprod",S.pProd); renderPainel(); });
+S.pEmp = ls.get("guarita.pemp")||"";
+$("#p-emp").addEventListener("change",e=>{ S.pEmp=e.target.value; ls.set("guarita.pemp",S.pEmp); renderPainel(); });
 document.querySelectorAll("[data-prange]").forEach(b=>b.addEventListener("click",()=>{ S.pRange=b.dataset.prange; ls.set("guarita.prange",S.pRange); renderPainel(); }));
 function renderPainel(){
   fillProdutos();
   document.querySelectorAll("[data-prange]").forEach(b=>b.setAttribute("aria-pressed", String(b.dataset.prange===S.pRange)));
   const [ini,fim,rotulo]=periodo();
-  const base = S.pProd ? S.docs.filter(d=>produto(d.finalidade)===S.pProd) : S.docs;
+  fillEmpSel($("#p-emp"),"pEmp");
+  const base = S.docs.filter(d=>(!S.pProd || produto(d.finalidade)===S.pProd) && (!S.pEmp || empresaDe(d)===S.pEmp));
   const open=base.filter(isOpen);
   const per=base.filter(d=>(d.chegada||0)>=ini && (d.chegada||0)<fim);
   const sai=base.filter(d=>d.saida && d.saida>=ini && d.saida<fim);
@@ -792,7 +818,7 @@ function renderPainel(){
   const media=perms.length?perms.reduce((a,b)=>a+b,0)/perms.length:null;
   const carg=per.filter(d=>isCarga(d.finalidade)).length, desc=per.filter(d=>String(d.finalidade||"").startsWith("DESCARREG")).length;
   const dentro=open.filter(d=>d.status==="CARREGANDO"||d.status==="DESCARREGANDO").length;
-  $("#painel-sub").textContent = (S.pProd?S.pProd+" · ":"") + rotulo;
+  $("#painel-sub").textContent = (S.pProd?S.pProd+" · ":"") + (S.pEmp?S.pEmp+" · ":"") + rotulo;
   $("#kpis").innerHTML = `
     <div class="kpi hl"><small>No pátio agora</small><b>${open.length}</b><span>${open.filter(d=>d.status==="PATIO").length} aguardando · ${dentro} dentro</span></div>
     <div class="kpi"><small>Entradas · ${esc(rotulo.toLowerCase())}</small><b>${per.length}</b><span>${carg} carregamentos · ${desc} descargas</span></div>
@@ -805,16 +831,17 @@ function renderPainel(){
       : `<div class="count">Tudo certo: nenhum horário fora de ordem.</div>`);
   const fm=new Map(), tm=new Map();
   const chave = d => S.pProd ? (d.finalidade||"—") : produto(d.finalidade);
-  per.forEach(d=>{ fm.set(chave(d),(fm.get(chave(d))||0)+1); tm.set(d.transportadora||"—",(tm.get(d.transportadora||"—")||0)+1); });
+  const em=new Map();
+  per.forEach(d=>{ fm.set(chave(d),(fm.get(chave(d))||0)+1); tm.set(d.transportadora||"—",(tm.get(d.transportadora||"—")||0)+1); const e=empresaDe(d)||"Sem empresa"; em.set(e,(em.get(e)||0)+1); });
   $("#h-bprod").textContent = S.pProd ? "Finalidades no período" : "Produtos no período";
-  $("#b-fin").innerHTML=bars(fm); $("#b-tr").innerHTML=bars(tm,"g");
+  $("#b-fin").innerHTML=bars(fm); $("#b-tr").innerHTML=bars(tm,"g"); $("#b-emp").innerHTML=bars(em);
 }
 
 /* ---------- resumo do pátio (lado esquerdo) ---------- */
 // Carregar: soja/milho por empresa (SOJA LDC, SOJA BUNGE…), demais por produto. Descarregar: por produto.
 function grupoResumo(d){
   const f=String(d.finalidade||"").toUpperCase().trim();
-  if(isCarga(f)){ const s=f.replace(/^CARREG\w*\s+/,""); return {tipo:"C", nome:/^(SOJA|MILHO)\b/.test(s)?s:produto(f)}; }
+  if(isCarga(f)){ const e=empresaDe(d); return {tipo:"C", nome:produto(f)+(e?" "+e:"")}; }
   if(f.startsWith("DESCARREG")) return {tipo:"D", nome:produto(f)};
   return {tipo:"O", nome:produto(f)};
 }
@@ -854,7 +881,7 @@ function imprimirTicket(d){
     <div class="tk-t">GUARITA · FAZENDA BATOVI</div>
     <div class="tk-placa">${esc(d.placa)}</div>
     <div class="tk-st">${esc(SLABEL[d.status]||d.status||"")}</div>
-    <dl>${linha("Motorista",d.motorista)}${linha("Transportadora",d.transportadora)}${linha("Finalidade",d.finalidade)}</dl>
+    <dl>${linha("Motorista",d.motorista)}${linha("Transportadora",d.transportadora)}${linha("Finalidade",d.finalidade)}${empresaDe(d)?linha("Empresa",empresaDe(d)):""}</dl>
     <div class="tk-sep"></div>
     <dl>${linha("Chegada",dataHora(d.chegada))}${linha("Entrada",d.entrada?dataHora(d.entrada):"–")}${d.nfe?linha("Fim carreg.",dataHora(d.nfe)):""}${linha("Saída",d.saida?dataHora(d.saida):"–")}</dl>
     ${d.nfe&&d.entrada&&d.nfe>=d.entrada?`<dl>${linha("Carregando",dur(d.nfe-d.entrada)+" h")}${d.saida&&d.saida>=d.nfe?linha("Espera NF-e",dur(d.saida-d.nfe)+" h"):""}</dl>`:""}
@@ -921,6 +948,7 @@ fPlaca.addEventListener("input", ()=>{
     h.className="hint"; h.textContent=`Última visita: ${dmhm(last.chegada)} · ${last.transportadora||""} · ${last.finalidade||""}`;
     if(!$("#f-mot").value) $("#f-mot").value=last.motorista||"";
     if(!$("#f-transp").value) $("#f-transp").value=last.transportadora||"";
+    if(!$("#f-emp").value) $("#f-emp").value=empresaDe(last)||"";
   } else { h.className="hint"; h.textContent="Primeira visita desta placa nos últimos "+S.dias+" dias."; }
   const aberto=S.docs.find(d=>d.placa===p && isOpen(d));
   if(aberto){ dup.hidden=false; dup.textContent=`${p} já está no pátio desde ${dmhm(aberto.chegada)} (${SLABEL[aberto.status]}). Se for outra viagem, toque de novo em registrar.`; }
@@ -934,7 +962,7 @@ function newId(){ return "A"+Date.now().toString(36).toUpperCase()+Math.random()
 let pendingId=null;
 $("#form-nova").addEventListener("submit", async e=>{
   e.preventDefault();
-  const p=normPlaca(fPlaca.value), mot=$("#f-mot").value.trim().toUpperCase(), tr=$("#f-transp").value.trim().toUpperCase(), fin=$("#f-fin").value, obs=$("#f-obs").value.trim();
+  const p=normPlaca(fPlaca.value), mot=$("#f-mot").value.trim().toUpperCase(), tr=$("#f-transp").value.trim().toUpperCase(), fin=$("#f-fin").value, emp=$("#f-emp").value.trim().toUpperCase(), obs=$("#f-obs").value.trim();
   if(!placaOk(p)){ toast("Confira a placa: use ABC1D23 ou ABC1234.", true); fPlaca.focus(); return; }
   if(!mot){ toast("Informe o motorista.", true); $("#f-mot").focus(); return; }
   if(!tr){ toast("Informe a transportadora.", true); $("#f-transp").focus(); return; }
@@ -946,7 +974,7 @@ $("#form-nova").addEventListener("submit", async e=>{
   const btn=$("#btn-reg"); btn.disabled=true; btn.innerHTML='<span class="spin"></span> Salvando na planilha…';
   pendingId = pendingId || newId();   // mesmo id se tentar de novo: não duplica
   try{
-    const j = await apiPost({acao:"criar", registro:{id:pendingId, placa:p, motorista:mot, transportadora:tr, finalidade:fin, obs, chegada:cheg}});
+    const j = await apiPost({acao:"criar", registro:{id:pendingId, placa:p, motorista:mot, transportadora:tr, finalidade:fin, empresa:emp, obs, chegada:cheg}});
     putDoc(j.registro); pendingId=null;
     if($("#f-semordem").checked){ try{ const j2=await apiPost({acao:"atualizar", id:j.registro.id, versao:j.registro.versao, campos:{status:"SEM ORDEM"}}); putDoc(j2.registro); }catch(e2){ toast("Chegada salva, mas não marcou sem ordem. Use o botão Sem ordem no cartão.", true); } }
     toast(`Chegada registrada · ${p} às ${hm(cheg)}`);
@@ -960,12 +988,13 @@ $("#form-nova").addEventListener("submit", async e=>{
 /* ---------- histórico ---------- */
 document.querySelectorAll("[data-range]").forEach(b=>b.addEventListener("click",()=>{ S.range=b.dataset.range; renderHist(); }));
 $("#h-status").addEventListener("change", e=>{ S.st=e.target.value; renderHist(); });
+$("#h-emp").addEventListener("change", e=>{ S.hEmp=e.target.value; renderHist(); });
 let qT; $("#h-q").addEventListener("input", e=>{ clearTimeout(qT); qT=setTimeout(()=>{ S.q=e.target.value; renderHist(); },150); });
 $("#btn-csv").addEventListener("click", ()=>{
   const br = t => { if(!t) return ""; const d=F(t); return pad(d.getUTCDate())+"/"+pad(d.getUTCMonth()+1)+"/"+d.getUTCFullYear(); };
   const cell = v => `"${String(v??"").replace(/"/g,'""')}"`;
-  const head=["DATA CHEGADA","HORA CHEGADA","STATUS","PLACA","MOTORISTA","TRANSPORTADORA","FINALIDADE","DATA ENTRADA","HORA ENTRADA","DATA FIM CARREG.","HORA FIM CARREG.","DATA SAÍDA","HORA SAÍDA","PERMANÊNCIA","OBSERVAÇÃO","CONFERIR"];
-  const lines=[head.join(";")].concat(histRows().slice().reverse().map(d=>[br(d.chegada),d.chegada?hm(d.chegada):"",d.status,d.placa,d.motorista,d.transportadora,d.finalidade,br(d.entrada),d.entrada?hm(d.entrada):"",br(d.nfe),d.nfe?hm(d.nfe):"",br(d.saida),d.saida?hm(d.saida):"",perm(d)!=null?dur(perm(d)):"",d.obs,issues(d).join(" / ")].map(cell).join(";")));
+  const head=["DATA CHEGADA","HORA CHEGADA","STATUS","PLACA","MOTORISTA","TRANSPORTADORA","FINALIDADE","EMPRESA","DATA ENTRADA","HORA ENTRADA","DATA FIM CARREG.","HORA FIM CARREG.","DATA SAÍDA","HORA SAÍDA","PERMANÊNCIA","OBSERVAÇÃO","CONFERIR"];
+  const lines=[head.join(";")].concat(histRows().slice().reverse().map(d=>[br(d.chegada),d.chegada?hm(d.chegada):"",d.status,d.placa,d.motorista,d.transportadora,d.finalidade,empresaDe(d),br(d.entrada),d.entrada?hm(d.entrada):"",br(d.nfe),d.nfe?hm(d.nfe):"",br(d.saida),d.saida?hm(d.saida):"",perm(d)!=null?dur(perm(d)):"",d.obs,issues(d).join(" / ")].map(cell).join(";")));
   const now=F(Date.now());
   const blob=new Blob(["﻿"+lines.join("\r\n")],{type:"text/csv;charset=utf-8"});
   const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
@@ -982,7 +1011,7 @@ function openEdit(d){
   S.editing=d.id; S.delArm=false; $("#ed-del").textContent="Excluir";
   $("#ed-plate").innerHTML=plate(d.placa,true);
   $("#e-placa").value=d.placa||""; $("#e-status").value=STATUS.includes(d.status)?d.status:"OUTRO";
-  $("#e-mot").value=d.motorista||""; $("#e-transp").value=d.transportadora||"";
+  $("#e-mot").value=d.motorista||""; $("#e-transp").value=d.transportadora||""; $("#e-emp").value=d.empresa||"";
   finOptions($("#e-fin"), d.finalidade);
   $("#e-cheg").value=toLocalInput(d.chegada); $("#e-ent").value=toLocalInput(d.entrada); $("#e-sai").value=toLocalInput(d.saida); $("#e-nfe").value=toLocalInput(d.nfe); $("#e-nfe-row").hidden = !isCarga(d.finalidade) && !d.nfe;
   $("#e-obs").value=d.obs||""; calcPerm();
@@ -1010,7 +1039,7 @@ $("#form-ed").addEventListener("submit", async e=>{
     (OPEN.has(st)&&sa)?"Veículo no pátio não tem saída. Apague a saída ou mude o status.":"";
   if(bad){ er.hidden=false; er.textContent=bad; return; }
   closeEdit();
-  await upd(d,{placa:p, status:st, motorista:$("#e-mot").value.trim().toUpperCase(), transportadora:$("#e-transp").value.trim().toUpperCase(), finalidade:$("#e-fin").value, chegada:c, entrada:en, saida:sa, nfe:nf, obs:$("#e-obs").value.trim()}, "Registro atualizado");
+  await upd(d,{placa:p, status:st, motorista:$("#e-mot").value.trim().toUpperCase(), transportadora:$("#e-transp").value.trim().toUpperCase(), finalidade:$("#e-fin").value, empresa:$("#e-emp").value.trim().toUpperCase(), chegada:c, entrada:en, saida:sa, nfe:nf, obs:$("#e-obs").value.trim()}, "Registro atualizado");
 });
 $("#ed-del").addEventListener("click", async ()=>{
   if(!S.delArm){ S.delArm=true; $("#ed-del").textContent="Toque de novo para excluir"; return; }
