@@ -42,28 +42,28 @@ header p{margin:.3vh 0 0;color:var(--muted);font-size:2vh}
 .call.so .chip{background:rgba(229,83,75,.15);color:var(--ink)}
 
 /* placa Mercosul */
-.placa{display:inline-flex;flex-direction:column;background:#fff;color:#111;border:2px solid #1B1B1B;border-radius:.6vh;overflow:hidden;min-width:7.4vw;text-align:center;flex:none}
+.placa{display:inline-flex;flex-direction:column;background:#fff;color:#111;border:2px solid #1B1B1B;border-radius:.6vh;overflow:hidden;min-width:0;text-align:center;flex:none}
 .placa i{display:block;background:#1F3E9C;color:#fff;font-style:normal;font-size:1vh;font-weight:700;letter-spacing:.2em;line-height:1.6vh}
-.placa b{font-family:var(--fd);font-weight:800;font-size:3.1vh;letter-spacing:.04em;line-height:4.1vh;padding:0 .6vw}
+.placa b{font-family:var(--fd);font-weight:800;font-size:3vh;letter-spacing:.03em;line-height:3.9vh;padding:0 .45vw}
 .chip .placa{min-width:auto}
 .chip .placa b{font-size:2.6vh;line-height:3.2vh}
 .chip .placa i{font-size:.8vh;line-height:1.2vh}
 
 /* filas */
-.grid{display:grid;grid-template-columns:1fr 1.08fr 1fr;gap:1.4vw;min-height:0}
+.grid{display:grid;grid-template-columns:1fr 1fr 1.05fr 1fr;gap:1.4vw;min-height:0}
 .col{background:var(--panel);border:1px solid var(--line);border-radius:1.6vh;display:flex;flex-direction:column;min-height:0;overflow:hidden}
 .col>h3{margin:0;padding:1.2vh 1.2vw;font-family:var(--fd);font-weight:800;font-size:3vh;white-space:nowrap;letter-spacing:.04em;display:flex;align-items:center;gap:.8vw;border-bottom:1px solid var(--line)}
 .col>h3 .n{margin-left:auto;font-size:1.9vh;color:var(--muted);font-weight:600}
 .list{flex:1;min-height:0;overflow:hidden;position:relative}
 .grp{padding:.8vh 1.2vw .2vh;font-family:var(--fd);font-weight:700;font-size:2.4vh;color:var(--yellow);letter-spacing:.06em;text-transform:uppercase}
-.row.r3{grid-template-columns:8.5vh auto minmax(0,1fr)}
-.row{display:grid;grid-template-columns:8.5vh auto minmax(0,1fr) auto;align-items:center;gap:1vw;padding:.9vh 1.2vw;border-top:1px solid var(--line)}
-.pos{width:8.5vh;height:5.6vh;border-radius:2.8vh;display:grid;place-items:center;font-family:var(--fd);font-weight:800;font-size:3.4vh;background:var(--yellow);color:#231F00}
-.pos.in{background:var(--orange);color:#2A1100;font-size:1.7vh;letter-spacing:.04em}
+.row.r3{grid-template-columns:7vh auto minmax(0,1fr)}
+.row{display:grid;grid-template-columns:7vh auto minmax(0,1fr) auto;align-items:center;gap:.7vw;padding:.9vh .9vw;border-top:1px solid var(--line)}
+.pos{width:7vh;height:5.2vh;border-radius:2.6vh;display:grid;place-items:center;font-family:var(--fd);font-weight:800;font-size:3.4vh;background:var(--yellow);color:#231F00}
+.pos.in{background:var(--orange);color:#2A1100;font-size:1.45vh;letter-spacing:.04em}
 .pos.nf{background:var(--blue);color:#06182B;font-size:1.7vh}
 .pos.ok{background:var(--green);color:#06210F;font-size:1.7vh}
 .pos.so{background:var(--red);color:#2B0705;font-size:1.7vh}
-.who b{display:block;font-family:var(--fd);font-weight:700;font-size:3vh;line-height:1.05}
+.who b{display:block;font-family:var(--fd);font-weight:700;font-size:2.8vh;line-height:1.05}
 .who{min-width:0}.who b,.who span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .who span{display:block;color:var(--muted);font-size:1.9vh}
 .st{font-family:var(--fd);font-weight:800;font-size:2.2vh;padding:.6vh .9vw;border-radius:99px;white-space:nowrap;letter-spacing:.03em}
@@ -72,9 +72,11 @@ header p{margin:.3vh 0 0;color:var(--muted);font-size:2vh}
 .st.NF{background:rgba(75,155,232,.18);color:#9CCBFF}
 .st.OK{background:var(--green);color:#06210F}
 .st.SO{background:rgba(229,83,75,.18);color:#FFB3AC}
+.col>h3 small{font-size:1.7vh;color:var(--muted);font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+.col.soja>h3{color:#C8E66B}.col.milho>h3{color:var(--yellow)}
 .col.doc{border-color:rgba(75,155,232,.55)}
 .col.doc>h3{color:#9CCBFF}
-.st.wt{font-size:1.9vh;padding:.5vh .6vw}
+em.wt{font-style:normal;color:#9CCBFF;font-weight:700}
 .pos.nf{font-size:3.2vh}
 .vazio-l{padding:4vh 1.2vw;color:var(--muted);font-size:2.4vh;text-align:center}
 
@@ -100,7 +102,8 @@ footer .aviso{margin-left:auto;color:var(--ink);font-weight:700;font-size:2.1vh}
   </section>
 
   <section class="grid">
-    <div class="col"><h3>🚚 CARREGAMENTO <span class="n" id="n-c"></span></h3><div class="list" id="l-c"></div></div>
+    <div class="col soja"><h3>🌱 SOJA <small>carregar</small> <span class="n" id="n-c"></span></h3><div class="list" id="l-c"></div></div>
+    <div class="col milho"><h3>🌽 MILHO <small>carregar</small> <span class="n" id="n-m"></span></h3><div class="list" id="l-m"></div></div>
     <div class="col doc"><h3 title="Aguardando nota fiscal">📄 DOCUMENTAÇÃO <span class="n" id="n-n"></span></h3><div class="list" id="l-n"></div></div>
     <div class="col"><h3>⬇ DESCARGA <span class="n" id="n-d"></span></h3><div class="list" id="l-d"></div></div>
   </section>
@@ -144,6 +147,8 @@ function demo(){
     {placa:"HIJ8K90",motorista:"MARCOS EXEMPLO",finalidade:"CARREGAR SOJA",empresa:"LDC",status:"LIBERADO",chegada:h(6),saida:now-8*60e3},
     {placa:"IJK9L01",motorista:"RAFAEL EXEMPLO",finalidade:"CARREGAR MILHO",empresa:"FS",status:"LIBERADO",chegada:h(5),saida:now-3*60e3},
     {placa:"JKL0M12",motorista:"DIEGO EXEMPLO",finalidade:"CARREGAR MILHO",empresa:"FS",status:"PATIO",chegada:h(3)},
+    {placa:"QRS7T89",motorista:"JORGE EXEMPLO",finalidade:"CARREGAR MILHO",empresa:"LDC",status:"CARREGANDO",chegada:h(4)},
+    {placa:"RST8U90",motorista:"EDSON EXEMPLO",finalidade:"CARREGAR MILHO",empresa:"FS",status:"PATIO",chegada:h(2)},
     {placa:"KLM1N23",motorista:"FABIO EXEMPLO",finalidade:"CARREGAR SOJA",empresa:"",status:"SEM ORDEM",chegada:h(4)},
     {placa:"LMN2O34",motorista:"MARCIO EXEMPLO",finalidade:"DESCARREGAR 20.00.20",empresa:"MOSAIC",status:"DESCARREGANDO",chegada:h(2)},
     {placa:"MNO3P45",motorista:"ALEX EXEMPLO",finalidade:"DESCARREGAR 20.00.20",empresa:"MOSAIC",status:"PATIO",chegada:h(1.5)},
@@ -157,8 +162,8 @@ let regs=[], page=0;
 function espera(ms){ const m=Math.max(0,Math.round((Date.now()-ms)/60e3)); return m<60?m+" min":Math.floor(m/60)+"h"+two(m%60); }
 function rowDoc(d,i){
   const ref=d.nfe||d.entrada||d.chegada;
-  const info=[produto(d.finalidade), d.empresa].filter(Boolean).join(" · ")+(d.nfe?` · carregou ${hm(d.nfe)}`:"");
-  return `<div class="row"><div class="pos nf">${i}º</div>${placa(d.placa)}<div class="who"><b>${esc(nome1(d.motorista))}</b><span>${esc(info)}</span></div><span class="st NF wt">${espera(ref)}</span></div>`;
+  const info=[produto(d.finalidade), d.empresa].filter(Boolean).join(" · ");
+  return `<div class="row r3"><div class="pos nf">${i}º</div>${placa(d.placa)}<div class="who"><b>${esc(nome1(d.motorista))}</b><span><em class="wt">⏱ ${espera(ref)}</em> · ${esc(info)}</span></div></div>`;
 }
 function rowHtml(d,pos){
   const s=d.status; let p, st;
@@ -167,17 +172,17 @@ function rowHtml(d,pos){
   else if(s==="AGUARDANDO NFE"){ p=`<div class="pos nf">NOTA</div>`; st=`<span class="st NF">AGUARDANDO NOTA</span>`; }
   else if(s==="NOTA PRONTA"){ p=`<div class="pos ok">OK</div>`; st=`<span class="st OK">NOTA PRONTA</span>`; }
   else { p=`<div class="pos so">!</div>`; st=`<span class="st SO">SEM ORDEM</span>`; }
-  const info=[produto(d.finalidade), d.empresa].filter(Boolean).join(" · ")+` · chegou ${hm(d.chegada)}`;
+  const info=(isCarga(d.finalidade)&&produto(d.finalidade)==="SOJA"||produto(d.finalidade)==="MILHO") ? (d.empresa||`chegou ${hm(d.chegada)}`) : [produto(d.finalidade), d.empresa].filter(Boolean).join(" · ");
   return `<div class="row r3">${p}${placa(d.placa)}<div class="who"><b>${esc(nome1(d.motorista))}</b><span>${esc(info)}</span></div></div>`;
 }
 const ORDEM={"NOTA PRONTA":0,"AGUARDANDO NFE":1,"CARREGANDO":2,"DESCARREGANDO":2,"PATIO":3,"SEM ORDEM":4};
-function lista(el, nEl, docs){
+function lista(el, nEl, docs, semTitulo){
   const grupos=new Map();
   docs.forEach(d=>{const g=produto(d.finalidade); if(!grupos.has(g)) grupos.set(g,[]); grupos.get(g).push(d);});
   const linhas=[];
   [...grupos.entries()].sort((a,b)=>b[1].length-a[1].length).forEach(([g,arr])=>{
     arr.sort((a,b)=>(ORDEM[a.status]-ORDEM[b.status])||(a.chegada-b.chegada));
-    linhas.push(`<div class="grp">${esc(g)}</div>`); let pos=0;
+    if(g!==semTitulo) linhas.push(`<div class="grp">${esc(g)}</div>`); let pos=0;
     arr.forEach(d=>linhas.push(rowHtml(d, d.status==="PATIO"?++pos:0)));
   });
   nEl.dataset.base=docs.length?`${docs.length}`:"";
@@ -192,7 +197,7 @@ function paginar(el, linhas){
     if(h+kh>H && pages[pages.length-1].length){ pages.push([]); h=0; } pages[pages.length-1].push(k.outerHTML); h+=k.offsetHeight; });
   return pages;
 }
-let pagesC=[[]], pagesD=[[]], pagesN=[[]];
+let pagesC=[[]], pagesM=[[]], pagesD=[[]], pagesN=[[]];
 function render(){
   const open=regs.filter(d=>ABERTOS.includes(d.status));
   // liberados nos últimos 30 minutos aparecem na faixa verde
@@ -206,12 +211,15 @@ function render(){
   const doc=open.filter(d=>d.status==="AGUARDANDO NFE").sort((a,b)=>((a.nfe||a.entrada||a.chegada)-(b.nfe||b.entrada||b.chegada)));
   $("#n-n").dataset.base=doc.length?`${doc.length}`:"";
   pagesN=paginar($("#l-n"), doc.map((d,i)=>rowDoc(d,i+1)));
-  pagesC=paginar($("#l-c"), lista($("#l-c"),$("#n-c"),fila.filter(d=>isCarga(d.finalidade))));
+  // Soja numa coluna; milho e os outros carregamentos (semente, boi…) na outra
+  const carga=fila.filter(d=>isCarga(d.finalidade));
+  pagesC=paginar($("#l-c"), lista($("#l-c"),$("#n-c"),carga.filter(d=>produto(d.finalidade)==="SOJA"),"SOJA"));
+  pagesM=paginar($("#l-m"), lista($("#l-m"),$("#n-m"),carga.filter(d=>produto(d.finalidade)!=="SOJA"),"MILHO"));
   pagesD=paginar($("#l-d"), lista($("#l-d"),$("#n-d"),fila.filter(d=>!isCarga(d.finalidade))));
   showPage();
 }
 function showPage(){
-  [[$("#l-c"),pagesC,$("#n-c")],[$("#l-n"),pagesN,$("#n-n")],[$("#l-d"),pagesD,$("#n-d")]].forEach(([el,pg,n])=>{
+  [[$("#l-c"),pagesC,$("#n-c")],[$("#l-m"),pagesM,$("#n-m")],[$("#l-n"),pagesN,$("#n-n")],[$("#l-d"),pagesD,$("#n-d")]].forEach(([el,pg,n])=>{
     const i=page%pg.length; el.innerHTML=pg[i].join("")||`<div class="vazio-l">Nenhum veículo nesta fila.</div>`;
     const base=n.dataset.base||""; n.innerHTML=esc(base)+(pg.length>1?` <span class="pg">${i+1}/${pg.length}</span>`:"");
   });
