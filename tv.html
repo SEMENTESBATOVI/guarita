@@ -56,10 +56,11 @@ header p{margin:.3vh 0 0;color:var(--muted);font-size:2vh}
 .col>h3 .n{margin-left:auto;font-size:1.9vh;color:var(--muted);font-weight:600}
 .list{flex:1;min-height:0;overflow:hidden;position:relative}
 .grp{padding:.8vh 1.2vw .2vh;font-family:var(--fd);font-weight:700;font-size:2.4vh;color:var(--yellow);letter-spacing:.06em;text-transform:uppercase}
-.row.r3{grid-template-columns:7.6vh auto minmax(0,1fr)}
-.row{display:grid;grid-template-columns:7.6vh auto minmax(0,1fr) auto;align-items:center;gap:.5vw;padding:.9vh .7vw;border-top:1px solid var(--line)}
-.pos{width:7.6vh;height:5.2vh;border-radius:2.6vh;display:grid;place-items:center;font-family:var(--fd);font-weight:800;font-size:3.4vh;background:var(--yellow);color:#231F00}
-.pos.in{background:var(--orange);color:#2A1100;font-size:3vh}
+.row.r3{grid-template-columns:9.4vh auto minmax(0,1fr)}
+.row{display:grid;grid-template-columns:9.4vh auto minmax(0,1fr) auto;align-items:center;gap:.5vw;padding:.9vh .7vw;border-top:1px solid var(--line)}
+.pos{width:9.4vh;height:5.2vh;border-radius:2.6vh;display:grid;place-items:center;font-family:var(--fd);font-weight:800;font-size:3.4vh;background:var(--yellow);color:#231F00}
+.pos.in{background:var(--orange);color:#2A1100;width:9.4vh;border-radius:1.2vh;font-size:1.6vh;padding:0 .5vh!important;letter-spacing:0;white-space:nowrap;padding:0}
+.pos.in.d{font-size:1.18vh}
 .tag-in{display:inline-block;font-style:normal;background:var(--orange);color:#2A1100;font-family:var(--fd);font-weight:800;font-size:1.5vh;letter-spacing:0;border-radius:.5vh;padding:.1vh .4vh;max-width:100%;margin:.2vh 0;white-space:nowrap}
 .pos.nf{background:var(--blue);color:#06182B;font-size:1.7vh}
 .pos.ok{background:var(--green);color:#06210F;font-size:1.7vh}
@@ -182,12 +183,12 @@ function rowDoc(d,i){
 function rowHtml(d,pos){
   const s=d.status; let p, st;
   if(s==="PATIO"){ p=`<div class="pos">${pos}º</div>`; st=`<span class="st PATIO">AGUARDANDO</span>`; }
-  else if(s==="CARREGANDO"||s==="DESCARREGANDO"){ p=`<div class="pos in">${isCarga(d.finalidade)?"🚚":"⬇"}</div>`; st=`<span class="st ${s}">${s==="CARREGANDO"?"CARREGANDO":"DESCARREG."}</span>`; }
+  else if(s==="CARREGANDO"||s==="DESCARREGANDO"){ p=s==="CARREGANDO"?`<div class="pos in">CARREGANDO</div>`:`<div class="pos in d">DESCARREGANDO</div>`; st=`<span class="st ${s}">${s==="CARREGANDO"?"CARREGANDO":"DESCARREG."}</span>`; }
   else if(s==="AGUARDANDO NFE"){ p=`<div class="pos nf">NOTA</div>`; st=`<span class="st NF">AGUARDANDO NOTA</span>`; }
   else if(s==="NOTA PRONTA"){ p=`<div class="pos ok">OK</div>`; st=`<span class="st OK">NOTA PRONTA</span>`; }
   else { p=`<div class="pos so">!</div>`; st=`<span class="st SO">SEM ORDEM</span>`; }
   const info=(isCarga(d.finalidade)&&produto(d.finalidade)==="SOJA"||produto(d.finalidade)==="MILHO") ? (d.empresa||`chegou ${hm(d.chegada)}`) : [produto(d.finalidade), d.empresa].filter(Boolean).join(" · ");
-  const tag=(s==="CARREGANDO"||s==="DESCARREGANDO")?`<em class="tag-in">${s}</em>`:"";
+  const tag="";
   return `<div class="row r3">${p}${placa(d.placa)}<div class="who"><b>${esc(nome1(d.motorista))}</b>${tag}<span>${esc(info)}</span></div></div>`;
 }
 const ORDEM={"NOTA PRONTA":0,"AGUARDANDO NFE":1,"CARREGANDO":2,"DESCARREGANDO":2,"PATIO":3,"SEM ORDEM":4};
@@ -233,11 +234,14 @@ function render(){
   pagesD=paginar($("#l-d"), lista($("#l-d"),$("#n-d"),fila.filter(d=>!isCarga(d.finalidade))));
   showPage();
 }
+// diminui a letra do selo só o necessário para a palavra caber inteira
+function caber(){ document.querySelectorAll(".pos.in").forEach(e=>{ let f=parseFloat(getComputedStyle(e).fontSize); while(e.scrollWidth>e.clientWidth+1 && f>7){ f-=.5; e.style.fontSize=f+"px"; } }); }
 function showPage(){
   [[$("#l-c"),pagesC,$("#n-c")],[$("#l-m"),pagesM,$("#n-m")],[$("#l-n"),pagesN,$("#n-n")],[$("#l-d"),pagesD,$("#n-d")]].forEach(([el,pg,n])=>{
     const i=page%pg.length; el.innerHTML=pg[i].join("")||`<div class="vazio-l">Nenhum veículo nesta fila.</div>`;
     const base=n.dataset.base||""; n.innerHTML=esc(base)+(pg.length>1?` <span class="pg">${i+1}/${pg.length}</span>`:"");
   });
+  caber();
 }
 function relogio(){ const d=F(Date.now()); $("#hora").textContent=two(d.getUTCHours())+":"+two(d.getUTCMinutes());
   const dias=["DOMINGO","SEGUNDA","TERÇA","QUARTA","QUINTA","SEXTA","SÁBADO"]; $("#data").textContent=`${dias[d.getUTCDay()]} · ${two(d.getUTCDate())}/${two(d.getUTCMonth()+1)}`; }
