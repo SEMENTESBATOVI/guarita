@@ -45,7 +45,7 @@ header p{margin:.3vh 0 0;color:var(--muted);font-size:2vh}
 .placa{display:inline-flex;flex-direction:column;background:#fff;color:#111;border:2px solid #1B1B1B;border-radius:.6vh;overflow:hidden;min-width:0;text-align:center;flex:none}
 .placa i{display:block;background:#1F3E9C;color:#fff;font-style:normal;font-size:1vh;font-weight:700;letter-spacing:.2em;line-height:1.6vh}
 .placa b{font-family:var(--fd);font-weight:800;font-size:2.55vh;letter-spacing:.02em;line-height:3.4vh;padding:0 .35vw}
-.chip .placa{min-width:auto}
+.chip .placa{min-width:auto;width:10.6vh}
 .chip .placa b{font-size:2.6vh;line-height:3.2vh}
 .chip .placa i{font-size:.8vh;line-height:1.2vh}
 
@@ -56,8 +56,10 @@ header p{margin:.3vh 0 0;color:var(--muted);font-size:2vh}
 .col>h3 .n{margin-left:auto;font-size:1.9vh;color:var(--muted);font-weight:600}
 .list{flex:1;min-height:0;overflow:hidden;position:relative}
 .grp{padding:.8vh 1.2vw .2vh;font-family:var(--fd);font-weight:700;font-size:2.4vh;color:var(--yellow);letter-spacing:.06em;text-transform:uppercase}
-.row.r3{grid-template-columns:9.4vh auto minmax(0,1fr)}
-.row{display:grid;grid-template-columns:9.4vh auto minmax(0,1fr) auto;align-items:center;gap:.5vw;padding:.9vh .7vw;border-top:1px solid var(--line)}
+.row.r3{grid-template-columns:9.4vh 12.4vh minmax(0,1fr)}
+.row .placa{width:12.4vh}
+.placa b{font-variant-numeric:tabular-nums;white-space:nowrap}
+.row{display:grid;grid-template-columns:9.4vh 12.4vh minmax(0,1fr) auto;align-items:center;gap:.5vw;padding:.9vh .7vw;border-top:1px solid var(--line)}
 .pos{width:9.4vh;height:5.2vh;border-radius:2.6vh;display:grid;place-items:center;font-family:var(--fd);font-weight:800;font-size:3.4vh;background:var(--yellow);color:#231F00}
 .pos.in{background:var(--orange);color:#2A1100;width:9.4vh;border-radius:1.2vh;font-size:1.6vh;padding:0 .5vh!important;letter-spacing:0;white-space:nowrap;padding:0}
 .pos.in.d{font-size:1.18vh}
@@ -235,7 +237,13 @@ function render(){
   showPage();
 }
 // diminui a letra do selo só o necessário para a palavra caber inteira
-function caber(){ document.querySelectorAll(".pos.in").forEach(e=>{ let f=parseFloat(getComputedStyle(e).fontSize); while(e.scrollWidth>e.clientWidth+1 && f>7){ f-=.5; e.style.fontSize=f+"px"; } }); }
+function caber(){
+  document.querySelectorAll(".pos.in").forEach(e=>{ let f=parseFloat(getComputedStyle(e).fontSize); while(e.scrollWidth>e.clientWidth+1 && f>7){ f-=.5; e.style.fontSize=f+"px"; } });
+  // placas: todas com o mesmo tamanho de letra (a menor que couber em todas)
+  const ps=[...document.querySelectorAll(".row .placa b")]; ps.forEach(e=>e.style.fontSize="");
+  if(ps.length){ let f=parseFloat(getComputedStyle(ps[0]).fontSize);
+    while(ps.some(e=>e.scrollWidth>e.clientWidth+1) && f>8){ f-=.5; ps.forEach(e=>e.style.fontSize=f+"px"); } }
+}
 function showPage(){
   [[$("#l-c"),pagesC,$("#n-c")],[$("#l-m"),pagesM,$("#n-m")],[$("#l-n"),pagesN,$("#n-n")],[$("#l-d"),pagesD,$("#n-d")]].forEach(([el,pg,n])=>{
     const i=page%pg.length; el.innerHTML=pg[i].join("")||`<div class="vazio-l">Nenhum veículo nesta fila.</div>`;
