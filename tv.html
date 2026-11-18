@@ -213,8 +213,8 @@ function paginar(el, linhas){
 let pagesC=[[]], pagesM=[[]], pagesD=[[]], pagesN=[[]];
 function render(){
   const open=regs.filter(d=>ABERTOS.includes(d.status));
-  // liberados nos últimos 30 minutos aparecem na faixa verde
-  const ok=regs.filter(d=>d.status==="LIBERADO"&&d.saida&&Date.now()-d.saida<LIB_MIN*60e3).sort((a,b)=>b.saida-a.saida);
+  // só carregamentos liberados nos últimos 30 minutos aparecem na faixa verde (descarga não tem nota para retirar)
+  const ok=regs.filter(d=>d.status==="LIBERADO"&&isCarga(d.finalidade)&&d.saida&&Date.now()-d.saida<LIB_MIN*60e3).sort((a,b)=>b.saida-a.saida);
   const so=open.filter(d=>d.status==="SEM ORDEM");
   $("#ok-chips").innerHTML=ok.map(d=>`<span class="chip">${placa(d.placa)}${esc(nome1(d.motorista))}</span>`).join("");
   $("#c-ok").classList.toggle("vazio",!ok.length); if(!ok.length) $("#ok-chips").innerHTML=`<span style="font-size:2.2vh">Ninguém liberado nos últimos 30 min</span>`;
