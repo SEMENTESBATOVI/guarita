@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Guarita Batovi — Painel dos Motoristas</title>
+<link rel="icon" href="favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Barlow:wght@500;600;700&display=swap">
+<style>
+:root{
+  --bg:#0F130D; --panel:#1A2017; --line:#2C3527; --ink:#F4F6EE; --muted:#A3AD97;
+  --yellow:#F2D20F; --orange:#F07A22; --blue:#4B9BE8; --green:#3FBF63; --red:#E5534B; --grey:#7E8875;
+  --fd:"Barlow Condensed",system-ui,sans-serif; --fb:"Barlow",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--fb);overflow:hidden;font-size:1.6vh}
+.wrap{height:100vh;display:grid;grid-template-rows:auto auto 1fr auto;gap:1.4vh;padding:1.6vh 1.6vw}
+header{display:flex;align-items:center;gap:1.4vw}
+header img{height:6vh;background:#fff;border-radius:.8vh;padding:.5vh .8vh}
+header h1{font-family:var(--fd);font-weight:800;font-size:4.6vh;letter-spacing:.02em;margin:0;line-height:1}
+header p{margin:.3vh 0 0;color:var(--muted);font-size:2vh}
+.clock{margin-left:auto;text-align:right;font-family:var(--fd)}
+.clock b{display:block;font-size:6.4vh;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
+.clock span{color:var(--muted);font-size:2vh}
+
+/* faixas de chamada */
+.calls{display:grid;grid-template-columns:1fr 1fr;gap:1.4vw}
+.call{border-radius:1.4vh;padding:1.2vh 1.4vw;display:flex;align-items:center;gap:1.2vw;min-height:9vh}
+.call h2{font-family:var(--fd);font-weight:800;font-size:3.4vh;margin:0;line-height:1;white-space:nowrap}
+.call h2 small{display:block;font-size:2.1vh;font-weight:600;opacity:.9;margin-top:.4vh}
+.call .chips{display:flex;flex-wrap:wrap;gap:.8vh;margin-left:auto;justify-content:flex-end}
+.call.ok{background:var(--green);color:#06210F;animation:pulse 1.6s ease-in-out infinite}
+.call.so{background:#3A1C19;border:2px solid var(--red)}
+.call.so h2{color:#FFB3AC}
+.call.vazio{background:var(--panel);color:var(--muted);animation:none}
+.call.vazio h2{color:var(--muted)}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(63,191,99,.0)}50%{box-shadow:0 0 0 .8vh rgba(63,191,99,.35)}}
+.chip{display:flex;align-items:center;gap:.6vw;background:rgba(0,0,0,.18);border-radius:1vh;padding:.5vh .8vw;font-family:var(--fd);font-weight:700;font-size:2.6vh}
+.call.so .chip{background:rgba(229,83,75,.15);color:var(--ink)}
+
+/* placa Mercosul */
+.placa{display:inline-flex;flex-direction:column;background:#fff;color:#111;border:2px solid #1B1B1B;border-radius:.6vh;overflow:hidden;min-width:8.6vw;text-align:center;flex:none}
+.placa i{display:block;background:#1F3E9C;color:#fff;font-style:normal;font-size:1vh;font-weight:700;letter-spacing:.2em;line-height:1.6vh}
+.placa b{font-family:var(--fd);font-weight:800;font-size:3.3vh;letter-spacing:.06em;line-height:4.1vh;padding:0 .6vw}
+.chip .placa{min-width:auto}
+.chip .placa b{font-size:2.6vh;line-height:3.2vh}
+.chip .placa i{font-size:.8vh;line-height:1.2vh}
+
+/* filas */
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:1.4vw;min-height:0}
+.col{background:var(--panel);border:1px solid var(--line);border-radius:1.6vh;display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.col>h3{margin:0;padding:1.2vh 1.2vw;font-family:var(--fd);font-weight:800;font-size:3.4vh;letter-spacing:.04em;display:flex;align-items:center;gap:.8vw;border-bottom:1px solid var(--line)}
+.col>h3 .n{margin-left:auto;font-size:2.2vh;color:var(--muted);font-weight:600}
+.list{flex:1;min-height:0;overflow:hidden;position:relative}
+.grp{padding:.8vh 1.2vw .2vh;font-family:var(--fd);font-weight:700;font-size:2.4vh;color:var(--yellow);letter-spacing:.06em;text-transform:uppercase}
+.row{display:grid;grid-template-columns:8.5vh auto minmax(0,1fr) auto;align-items:center;gap:1vw;padding:.9vh 1.2vw;border-top:1px solid var(--line)}
+.pos{width:8.5vh;height:5.6vh;border-radius:2.8vh;display:grid;place-items:center;font-family:var(--fd);font-weight:800;font-size:3.4vh;background:var(--yellow);color:#231F00}
+.pos.in{background:var(--orange);color:#2A1100;font-size:1.7vh;letter-spacing:.04em}
+.pos.nf{background:var(--blue);color:#06182B;font-size:1.7vh}
+.pos.ok{background:var(--green);color:#06210F;font-size:1.7vh}
+.pos.so{background:var(--red);color:#2B0705;font-size:1.7vh}
+.who b{display:block;font-family:var(--fd);font-weight:700;font-size:3vh;line-height:1.05}
+.who{min-width:0}.who b,.who span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.who span{display:block;color:var(--muted);font-size:1.9vh}
+.st{font-family:var(--fd);font-weight:800;font-size:2.2vh;padding:.6vh .9vw;border-radius:99px;white-space:nowrap;letter-spacing:.03em}
+.st.PATIO{background:rgba(242,210,15,.16);color:var(--yellow)}
+.st.CARREGANDO,.st.DESCARREGANDO{background:rgba(240,122,34,.18);color:#FFA867}
+.st.NF{background:rgba(75,155,232,.18);color:#9CCBFF}
+.st.OK{background:var(--green);color:#06210F}
+.st.SO{background:rgba(229,83,75,.18);color:#FFB3AC}
+.vazio-l{padding:4vh 1.2vw;color:var(--muted);font-size:2.4vh;text-align:center}
+
+footer{display:flex;align-items:center;gap:1.6vw;color:var(--muted);font-size:1.9vh;flex-wrap:wrap}
+footer .lg{display:flex;align-items:center;gap:.5vw}
+footer .dot{width:1.6vh;height:1.6vh;border-radius:50%}
+footer .aviso{margin-left:auto;color:var(--ink);font-weight:700;font-size:2.1vh}
+.off{position:fixed;inset:auto 1.6vw 1.6vh auto;background:var(--red);color:#fff;padding:1vh 1.4vw;border-radius:1vh;font-weight:700;font-size:2vh}
+.pg{font-size:1.9vh;color:var(--muted);font-weight:600;margin-left:.6vw}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <img src="logo-batovi.png" alt="Sementes Batovi">
+    <div><h1>ACOMPANHE SUA POSIÇÃO</h1><p>Guarita Fazenda Batovi · fila de carregamento e descarga</p></div>
+    <div class="clock"><b id="hora">--:--</b><span id="data"></span></div>
+  </header>
+
+  <section class="calls">
+    <div class="call ok" id="c-ok"><h2>LIBERADO<small>Retire sua nota e boa viagem</small></h2><div class="chips" id="ok-chips"></div></div>
+    <div class="call so" id="c-so"><h2>SEM ORDEM<small>Procure o comercial</small></h2><div class="chips" id="so-chips"></div></div>
+  </section>
+
+  <section class="grid">
+    <div class="col"><h3>🚚 CARREGAMENTO <span class="n" id="n-c"></span></h3><div class="list" id="l-c"></div></div>
+    <div class="col"><h3>⬇ DESCARGA <span class="n" id="n-d"></span></h3><div class="list" id="l-d"></div></div>
+  </section>
+
+  <footer>
+    <span class="lg"><span class="dot" style="background:var(--yellow)"></span>Aguardando (posição na fila)</span>
+    <span class="lg"><span class="dot" style="background:var(--orange)"></span>Dentro</span>
+    <span class="lg"><span class="dot" style="background:var(--blue)"></span>Aguardando nota</span>
+    <span class="lg"><span class="dot" style="background:var(--green)"></span>Liberado</span>
+    <span class="lg"><span class="dot" style="background:var(--red)"></span>Sem ordem</span>
+    <span class="aviso">Siga somente pela BR-070 · Atualiza sozinho</span>
+  </footer>
+</div>
+<div class="off" id="off" hidden>Sem conexão — mostrando a última atualização</div>
+<script>
+(()=>{
+const API="https://script.google.com/macros/s/AKfycbyqHUqNz7NSeVkQp11kLS4JFpSsa18NBrL9Qg_nmNG0I9oNDUVzJqrDZBWWUMDkz1tEwA/exec";
+const q=new URLSearchParams(location.search), TV=q.get("tv")||"", DEMO=q.has("demo");
+const TZOFF=-4*3600e3, F=ms=>{const d=new Date(ms+TZOFF);return d;};
+const two=n=>String(n).padStart(2,"0");
+const hm=ms=>{const d=F(ms);return two(d.getUTCHours())+":"+two(d.getUTCMinutes());};
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const $=s=>document.querySelector(s);
+const isCarga=f=>String(f||"").startsWith("CARREG");
+function produto(f){ let p=String(f||"").toUpperCase().trim().replace(/^(DES)?CARREG\w*\s+/,"").replace(/^ADUBO\s+/,""); if(/^(SOJA|MILHO)\b/.test(p)) p=p.split(" ")[0]; if(/^CALC/.test(p)) p="CALCÁRIO"; return p||"OUTROS"; }
+const nome1=n=>String(n||"").trim().split(/\s+/)[0]||"";
+const placa=p=>`<span class="placa"><i>BRASIL</i><b>${esc(p)}</b></span>`;
+const LIB_MIN=30;
+const ABERTOS=["PATIO","SEM ORDEM","CARREGANDO","DESCARREGANDO","AGUARDANDO NFE","NOTA PRONTA"];
+
+function demo(){
+  const now=Date.now(), h=x=>now-x*3600e3;
+  return [
+    {placa:"ABC1D23",motorista:"JOSE EXEMPLO",finalidade:"CARREGAR SOJA",empresa:"BUNGE",status:"CARREGANDO",chegada:h(2)},
+    {placa:"BCD2E34",motorista:"CARLOS EXEMPLO",finalidade:"CARREGAR SOJA",empresa:"BUNGE",status:"CARREGANDO",chegada:h(2.1)},
+    {placa:"CDE3F45",motorista:"ANTONIO EXEMPLO",finalidade:"CARREGAR SOJA",empresa:"BUNGE",status:"PATIO",chegada:h(10.5)},
+    {placa:"DEF4G56",motorista:"LUIZ EXEMPLO",finalidade:"CARREGAR SOJA",empresa:"CLIENTE",status:"PATIO",chegada:h(12.3)},
+    {placa:"EFG5H67",motorista:"PAULO EXEMPLO",finalidade:"CARREGAR SOJA",empresa:"COFCO",status:"PATIO",chegada:h(9)},
+    {placa:"FGH6I78",motorista:"PEDRO EXEMPLO",finalidade:"CARREGAR SOJA",empresa:"LDC",status:"PATIO",chegada:h(1)},
+    {placa:"GHI7J89",motorista:"JOAO EXEMPLO",finalidade:"CARREGAR SOJA",empresa:"COFCO",status:"AGUARDANDO NFE",chegada:h(16.8)},
+    {placa:"HIJ8K90",motorista:"MARCOS EXEMPLO",finalidade:"CARREGAR SOJA",empresa:"LDC",status:"LIBERADO",chegada:h(6),saida:now-8*60e3},
+    {placa:"IJK9L01",motorista:"RAFAEL EXEMPLO",finalidade:"CARREGAR MILHO",empresa:"FS",status:"LIBERADO",chegada:h(5),saida:now-3*60e3},
+    {placa:"JKL0M12",motorista:"DIEGO EXEMPLO",finalidade:"CARREGAR MILHO",empresa:"FS",status:"PATIO",chegada:h(3)},
+    {placa:"KLM1N23",motorista:"FABIO EXEMPLO",finalidade:"CARREGAR SOJA",empresa:"",status:"SEM ORDEM",chegada:h(4)},
+    {placa:"LMN2O34",motorista:"MARCIO EXEMPLO",finalidade:"DESCARREGAR 20.00.20",empresa:"MOSAIC",status:"DESCARREGANDO",chegada:h(2)},
+    {placa:"MNO3P45",motorista:"ALEX EXEMPLO",finalidade:"DESCARREGAR 20.00.20",empresa:"MOSAIC",status:"PATIO",chegada:h(1.5)},
+    {placa:"NOP4Q56",motorista:"SERGIO EXEMPLO",finalidade:"DESCARREGAR RAÇÃO",empresa:"",status:"PATIO",chegada:h(1.2)},
+    {placa:"OPQ5R67",motorista:"RICARDO EXEMPLO",finalidade:"DESCARREGAR PEDRA",empresa:"FORNECEDOR",status:"PATIO",chegada:h(.6)},
+    {placa:"PQR6S78",motorista:"VALDIR EXEMPLO",finalidade:"DESCARREGAR UREIA",empresa:"YARA",status:"PATIO",chegada:h(.4)}
+  ];
+}
+
+let regs=[], page=0;
+function rowHtml(d,pos){
+  const s=d.status; let p, st;
+  if(s==="PATIO"){ p=`<div class="pos">${pos}º</div>`; st=`<span class="st PATIO">AGUARDANDO</span>`; }
+  else if(s==="CARREGANDO"||s==="DESCARREGANDO"){ p=`<div class="pos in">DENTRO</div>`; st=`<span class="st ${s}">${s==="CARREGANDO"?"CARREGANDO":"DESCARREG."}</span>`; }
+  else if(s==="AGUARDANDO NFE"){ p=`<div class="pos nf">NOTA</div>`; st=`<span class="st NF">AGUARDANDO NOTA</span>`; }
+  else if(s==="NOTA PRONTA"){ p=`<div class="pos ok">OK</div>`; st=`<span class="st OK">NOTA PRONTA</span>`; }
+  else { p=`<div class="pos so">!</div>`; st=`<span class="st SO">SEM ORDEM</span>`; }
+  const info=[produto(d.finalidade), d.empresa].filter(Boolean).join(" · ")+` · chegou ${hm(d.chegada)}`;
+  return `<div class="row">${p}${placa(d.placa)}<div class="who"><b>${esc(nome1(d.motorista))}</b><span>${esc(info)}</span></div>${st}</div>`;
+}
+const ORDEM={"NOTA PRONTA":0,"AGUARDANDO NFE":1,"CARREGANDO":2,"DESCARREGANDO":2,"PATIO":3,"SEM ORDEM":4};
+function lista(el, nEl, docs){
+  const grupos=new Map();
+  docs.forEach(d=>{const g=produto(d.finalidade); if(!grupos.has(g)) grupos.set(g,[]); grupos.get(g).push(d);});
+  const linhas=[];
+  [...grupos.entries()].sort((a,b)=>b[1].length-a[1].length).forEach(([g,arr])=>{
+    arr.sort((a,b)=>(ORDEM[a.status]-ORDEM[b.status])||(a.chegada-b.chegada));
+    linhas.push(`<div class="grp">${esc(g)}</div>`); let pos=0;
+    arr.forEach(d=>linhas.push(rowHtml(d, d.status==="PATIO"?++pos:0)));
+  });
+  nEl.textContent=docs.length?`${docs.length} veículo${docs.length>1?"s":""}`:"";
+  return linhas;
+}
+function paginar(el, linhas){
+  // mede quantas linhas cabem e roda as páginas
+  el.innerHTML=linhas.join("")||`<div class="vazio-l">Nenhum veículo nesta fila.</div>`;
+  const H=el.clientHeight, kids=[...el.children]; let pages=[[]], h=0;
+  kids.forEach(k=>{ const kh=k.offsetHeight; if(h+kh>H && pages[pages.length-1].length){ pages.push([]); h=0; } pages[pages.length-1].push(k.outerHTML); h+=kh; });
+  return pages;
+}
+let pagesC=[[]], pagesD=[[]];
+function render(){
+  const open=regs.filter(d=>ABERTOS.includes(d.status));
+  // liberados nos últimos 30 minutos aparecem na faixa verde
+  const ok=regs.filter(d=>d.status==="LIBERADO"&&d.saida&&Date.now()-d.saida<LIB_MIN*60e3).sort((a,b)=>b.saida-a.saida);
+  const so=open.filter(d=>d.status==="SEM ORDEM");
+  $("#ok-chips").innerHTML=ok.map(d=>`<span class="chip">${placa(d.placa)}${esc(nome1(d.motorista))}</span>`).join("");
+  $("#c-ok").classList.toggle("vazio",!ok.length); if(!ok.length) $("#ok-chips").innerHTML=`<span style="font-size:2.2vh">Ninguém liberado nos últimos 30 min</span>`;
+  $("#so-chips").innerHTML=so.map(d=>`<span class="chip">${placa(d.placa)}${esc(nome1(d.motorista))}</span>`).join("");
+  $("#c-so").classList.toggle("vazio",!so.length); if(!so.length) $("#so-chips").innerHTML=`<span style="font-size:2.2vh">Ninguém sem ordem</span>`;
+  pagesC=paginar($("#l-c"), lista($("#l-c"),$("#n-c"),open.filter(d=>isCarga(d.finalidade))));
+  pagesD=paginar($("#l-d"), lista($("#l-d"),$("#n-d"),open.filter(d=>!isCarga(d.finalidade))));
+  showPage();
+}
+function showPage(){
+  [[$("#l-c"),pagesC,$("#n-c")],[$("#l-d"),pagesD,$("#n-d")]].forEach(([el,pg,n])=>{
+    const i=page%pg.length; el.innerHTML=pg[i].join("")||`<div class="vazio-l">Nenhum veículo nesta fila.</div>`;
+    const base=n.textContent.replace(/\s·\s.*$/,""); n.innerHTML=esc(base)+(pg.length>1?` <span class="pg">· pág. ${i+1}/${pg.length}</span>`:"");
+  });
+}
+function relogio(){ const d=F(Date.now()); $("#hora").textContent=two(d.getUTCHours())+":"+two(d.getUTCMinutes());
+  const dias=["DOMINGO","SEGUNDA","TERÇA","QUARTA","QUINTA","SEXTA","SÁBADO"]; $("#data").textContent=`${dias[d.getUTCDay()]} · ${two(d.getUTCDate())}/${two(d.getUTCMonth()+1)}`; }
+async function load(){
+  if(DEMO){ regs=demo(); render(); return; }
+  try{
+    const ctl=new AbortController(); const t=setTimeout(()=>ctl.abort(),20000);
+    const COD=q.get("codigo")||""; const r=await fetch(API+(COD?"?codigo="+encodeURIComponent(COD):"?tv="+encodeURIComponent(TV))+"&_="+Date.now(),{signal:ctl.signal}); clearTimeout(t);
+    const j=await r.json(); if(!j.ok) throw j;
+    regs=j.registros||[]; $("#off").hidden=true; render();
+  }catch(e){ $("#off").hidden=false; $("#off").textContent=(e&&e.erro==="codigo")?"Código da TV errado — confira o link":"Sem conexão — mostrando a última atualização"; }
+}
+relogio(); setInterval(relogio,10000);
+load(); setInterval(load,15000);
+setInterval(()=>{ page++; showPage(); },10000);
+addEventListener("resize",render);
+})();
+</script>
+</body>
+</html>
