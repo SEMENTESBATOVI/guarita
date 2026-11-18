@@ -45,8 +45,8 @@ header p{margin:.3vh 0 0;color:var(--muted);font-size:2vh}
 .placa{display:inline-flex;flex-direction:column;background:#fff;color:#111;border:2px solid #1B1B1B;border-radius:.6vh;overflow:hidden;min-width:0;text-align:center;flex:none}
 .placa i{display:block;background:#1F3E9C;color:#fff;font-style:normal;font-size:1vh;font-weight:700;letter-spacing:.2em;line-height:1.6vh}
 .placa b{font-family:var(--fd);font-weight:800;font-size:2.55vh;letter-spacing:.02em;line-height:3.4vh;padding:0 .35vw}
-.chip .placa{min-width:auto;width:10.6vh}
-.chip .placa b{font-size:2.6vh;line-height:3.2vh}
+.chip .placa{min-width:auto;width:11.6vh}
+.chip .placa b{font-size:2.3vh;line-height:3vh;padding:0 .3vw}
 .chip .placa i{font-size:.8vh;line-height:1.2vh}
 
 /* filas */
@@ -240,9 +240,11 @@ function render(){
 function caber(){
   document.querySelectorAll(".pos.in").forEach(e=>{ let f=parseFloat(getComputedStyle(e).fontSize); while(e.scrollWidth>e.clientWidth+1 && f>7){ f-=.5; e.style.fontSize=f+"px"; } });
   // placas: todas com o mesmo tamanho de letra (a menor que couber em todas)
-  const ps=[...document.querySelectorAll(".row .placa b")]; ps.forEach(e=>e.style.fontSize="");
-  if(ps.length){ let f=parseFloat(getComputedStyle(ps[0]).fontSize);
-    while(ps.some(e=>e.scrollWidth>e.clientWidth+1) && f>8){ f-=.5; ps.forEach(e=>e.style.fontSize=f+"px"); } }
+  [".row .placa b",".chip .placa b"].forEach(sel=>{
+    const ps=[...document.querySelectorAll(sel)]; ps.forEach(e=>e.style.fontSize="");
+    if(ps.length){ let f=parseFloat(getComputedStyle(ps[0]).fontSize);
+      while(ps.some(e=>e.scrollWidth>e.clientWidth+1) && f>8){ f-=.5; ps.forEach(e=>e.style.fontSize=f+"px"); } }
+  });
 }
 function showPage(){
   [[$("#l-c"),pagesC,$("#n-c")],[$("#l-m"),pagesM,$("#n-m")],[$("#l-n"),pagesN,$("#n-n")],[$("#l-d"),pagesD,$("#n-d")]].forEach(([el,pg,n])=>{
