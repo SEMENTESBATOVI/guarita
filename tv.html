@@ -112,7 +112,7 @@ footer .leg{display:flex;flex-wrap:wrap;gap:.6vh 1.4vw}
   <section class="grid">
     <div class="col soja"><h3>🌱 SOJA <small>carregar</small> <span class="n" id="n-c"></span></h3><div class="list" id="l-c"></div></div>
     <div class="col milho"><h3>🌽 MILHO <small>carregar</small> <span class="n" id="n-m"></span></h3><div class="list" id="l-m"></div></div>
-    <div class="col doc"><h3 title="Aguardando nota fiscal">📄 DOCUMENTAÇÃO <span class="n" id="n-n"></span></h3><div class="list" id="l-n"></div></div>
+    <div class="col doc"><h3 title="Aguardando nota fiscal">📄 AGUARDANDO NF-E <span class="n" id="n-n"></span></h3><div class="list" id="l-n"></div></div>
     <div class="col"><h3>⬇ DESCARGA <span class="n" id="n-d"></span></h3><div class="list" id="l-d"></div></div>
   </section>
 
@@ -120,7 +120,7 @@ footer .leg{display:flex;flex-wrap:wrap;gap:.6vh 1.4vw}
   <div class="leg">
     <span class="lg"><span class="dot" style="background:var(--yellow)"></span>Aguardando (posição na fila)</span>
     <span class="lg"><span class="dot" style="background:var(--orange)"></span>Dentro</span>
-    <span class="lg"><span class="dot" style="background:var(--blue)"></span>Aguardando documentação (tempo de espera)</span>
+    <span class="lg"><span class="dot" style="background:var(--blue)"></span>Aguardando NF-e (tempo desde o fim do carregamento)</span>
     <span class="lg"><span class="dot" style="background:var(--green)"></span>Liberado</span>
     <span class="lg"><span class="dot" style="background:var(--red)"></span>Sem ordem</span>
   </div>
@@ -174,9 +174,9 @@ function demo(){
 let regs=[], page=0;
 function espera(ms){ const m=Math.max(0,Math.round((Date.now()-ms)/60e3)); return m<60?m+" min":Math.floor(m/60)+"h"+two(m%60); }
 function rowDoc(d,i){
-  const ref=d.nfe||d.entrada||d.chegada;
+  // tempo contado a partir de quando foi marcado "Aguardando NF-e" (fim do carregamento)
   const info=[produto(d.finalidade), d.empresa].filter(Boolean).join(" · ");
-  return `<div class="row r3"><div class="pos nf">${i}º</div>${placa(d.placa)}<div class="who"><b>${esc(nome1(d.motorista))}</b><span><em class="wt">⏱ ${espera(ref)}</em> · ${esc(info)}</span></div></div>`;
+  return `<div class="row r3"><div class="pos nf">${i}º</div>${placa(d.placa)}<div class="who"><b>${esc(nome1(d.motorista))}</b><span>${d.nfe?`<em class="wt">⏱ ${espera(d.nfe)}</em> · `:""}${esc(info)}</span></div></div>`;
 }
 function rowHtml(d,pos){
   const s=d.status; let p, st;
@@ -221,7 +221,7 @@ function render(){
   $("#so-chips").innerHTML=so.map(d=>`<span class="chip">${placa(d.placa)}${esc(nome1(d.motorista))}</span>`).join("");
   $("#c-so").classList.toggle("vazio",!so.length); if(!so.length) $("#so-chips").innerHTML=`<span style="font-size:2.2vh">Ninguém sem ordem</span>`;
   const fila=open.filter(d=>d.status!=="AGUARDANDO NFE");
-  const doc=open.filter(d=>d.status==="AGUARDANDO NFE").sort((a,b)=>((a.nfe||a.entrada||a.chegada)-(b.nfe||b.entrada||b.chegada)));
+  const doc=open.filter(d=>d.status==="AGUARDANDO NFE").sort((a,b)=>((a.nfe||9e15)-(b.nfe||9e15))||(a.chegada-b.chegada));
   $("#n-n").dataset.base=doc.length?`${doc.length}`:"";
   pagesN=paginar($("#l-n"), doc.map((d,i)=>rowDoc(d,i+1)));
   // Soja numa coluna; milho e os outros carregamentos (semente, boi…) na outra
