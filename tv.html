@@ -44,7 +44,7 @@ header p{margin:.3vh 0 0;color:var(--muted);font-size:2vh}
 /* placa Mercosul */
 .placa{display:inline-flex;flex-direction:column;background:#fff;color:#111;border:2px solid #1B1B1B;border-radius:.6vh;overflow:hidden;min-width:0;text-align:center;flex:none}
 .placa i{display:block;background:#1F3E9C;color:#fff;font-style:normal;font-size:1vh;font-weight:700;letter-spacing:.2em;line-height:1.6vh}
-.placa b{font-family:var(--fd);font-weight:800;font-size:3vh;letter-spacing:.03em;line-height:3.9vh;padding:0 .45vw}
+.placa b{font-family:var(--fd);font-weight:800;font-size:2.55vh;letter-spacing:.02em;line-height:3.4vh;padding:0 .35vw}
 .chip .placa{min-width:auto}
 .chip .placa b{font-size:2.6vh;line-height:3.2vh}
 .chip .placa i{font-size:.8vh;line-height:1.2vh}
@@ -56,16 +56,16 @@ header p{margin:.3vh 0 0;color:var(--muted);font-size:2vh}
 .col>h3 .n{margin-left:auto;font-size:1.9vh;color:var(--muted);font-weight:600}
 .list{flex:1;min-height:0;overflow:hidden;position:relative}
 .grp{padding:.8vh 1.2vw .2vh;font-family:var(--fd);font-weight:700;font-size:2.4vh;color:var(--yellow);letter-spacing:.06em;text-transform:uppercase}
-.row.r3{grid-template-columns:7vh auto minmax(0,1fr)}
-.row{display:grid;grid-template-columns:7vh auto minmax(0,1fr) auto;align-items:center;gap:.7vw;padding:.9vh .9vw;border-top:1px solid var(--line)}
-.pos{width:7vh;height:5.2vh;border-radius:2.6vh;display:grid;place-items:center;font-family:var(--fd);font-weight:800;font-size:3.4vh;background:var(--yellow);color:#231F00}
-.pos.in{background:var(--orange);color:#2A1100;font-size:1.45vh;letter-spacing:.04em}
+.row.r3{grid-template-columns:7.6vh auto minmax(0,1fr)}
+.row{display:grid;grid-template-columns:7.6vh auto minmax(0,1fr) auto;align-items:center;gap:.5vw;padding:.9vh .7vw;border-top:1px solid var(--line)}
+.pos{width:7.6vh;height:5.2vh;border-radius:2.6vh;display:grid;place-items:center;font-family:var(--fd);font-weight:800;font-size:3.4vh;background:var(--yellow);color:#231F00}
+.pos.in{width:7.6vh;border-radius:1.2vh;line-height:1.1;text-align:center;padding:0 .3vh;background:var(--orange);color:#2A1100;font-size:1.45vh;letter-spacing:.02em}
 .pos.nf{background:var(--blue);color:#06182B;font-size:1.7vh}
 .pos.ok{background:var(--green);color:#06210F;font-size:1.7vh}
 .pos.so{background:var(--red);color:#2B0705;font-size:1.7vh}
-.who b{display:block;font-family:var(--fd);font-weight:700;font-size:2.8vh;line-height:1.05}
-.who{min-width:0}.who b,.who span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.who span{display:block;color:var(--muted);font-size:1.9vh}
+.who b{display:block;font-family:var(--fd);font-weight:700;font-size:2.15vh;line-height:1.05}
+.who{min-width:0}.who b,.who span{white-space:normal;overflow-wrap:normal}
+.who span{display:block;color:var(--muted);font-size:1.55vh;line-height:1.2}
 .st{font-family:var(--fd);font-weight:800;font-size:2.2vh;padding:.6vh .9vw;border-radius:99px;white-space:nowrap;letter-spacing:.03em}
 .st.PATIO{background:rgba(242,210,15,.16);color:var(--yellow)}
 .st.CARREGANDO,.st.DESCARREGANDO{background:rgba(240,122,34,.18);color:#FFA867}
@@ -119,7 +119,7 @@ footer .leg{display:flex;flex-wrap:wrap;gap:.6vh 1.4vw}
   <footer>
   <div class="leg">
     <span class="lg"><span class="dot" style="background:var(--yellow)"></span>Aguardando (posição na fila)</span>
-    <span class="lg"><span class="dot" style="background:var(--orange)"></span>Dentro</span>
+    <span class="lg"><span class="dot" style="background:var(--orange)"></span>Carregando / descarregando</span>
     <span class="lg"><span class="dot" style="background:var(--blue)"></span>Aguardando NF-e (tempo desde o fim do carregamento)</span>
     <span class="lg"><span class="dot" style="background:var(--green)"></span>Liberado</span>
     <span class="lg"><span class="dot" style="background:var(--red)"></span>Sem ordem</span>
@@ -150,10 +150,10 @@ const ABERTOS=["PATIO","SEM ORDEM","CARREGANDO","DESCARREGANDO","AGUARDANDO NFE"
 function demo(){
   const now=Date.now(), h=x=>now-x*3600e3;
   return [
-    {placa:"ABC1D23",motorista:"JOSE EXEMPLO",finalidade:"CARREGAR SOJA",empresa:"BUNGE",status:"CARREGANDO",chegada:h(2)},
-    {placa:"BCD2E34",motorista:"CARLOS EXEMPLO",finalidade:"CARREGAR SOJA",empresa:"BUNGE",status:"CARREGANDO",chegada:h(2.1)},
+    {placa:"ABC1D23",motorista:"JOSE EXEMPLO",finalidade:"CARREGAR SOJA",empresa:"BUNGE ALIMENTOS",status:"CARREGANDO",chegada:h(2)},
+    {placa:"BCD2E34",motorista:"CARLOS EXEMPLO",finalidade:"CARREGAR SOJA",empresa:"BUNGE ALIMENTOS",status:"CARREGANDO",chegada:h(2.1)},
     {placa:"CDE3F45",motorista:"ANTONIO EXEMPLO",finalidade:"CARREGAR SOJA",empresa:"BUNGE",status:"AGUARDANDO NFE",chegada:h(10.5),nfe:h(.5)},
-    {placa:"DEF4G56",motorista:"LUIZ EXEMPLO",finalidade:"CARREGAR SOJA",empresa:"CLIENTE",status:"PATIO",chegada:h(12.3)},
+    {placa:"DEF4G56",motorista:"LUIZ EXEMPLO",finalidade:"CARREGAR SOJA",empresa:"AGRICOLA ALVORADA",status:"PATIO",chegada:h(12.3)},
     {placa:"EFG5H67",motorista:"PAULO EXEMPLO",finalidade:"CARREGAR SOJA",empresa:"COFCO",status:"AGUARDANDO NFE",chegada:h(9),nfe:h(1.2)},
     {placa:"FGH6I78",motorista:"PEDRO EXEMPLO",finalidade:"CARREGAR SOJA",empresa:"LDC",status:"PATIO",chegada:h(1)},
     {placa:"GHI7J89",motorista:"JOAO EXEMPLO",finalidade:"CARREGAR SOJA",empresa:"COFCO",status:"AGUARDANDO NFE",chegada:h(16.8),nfe:h(15.5)},
@@ -163,7 +163,7 @@ function demo(){
     {placa:"QRS7T89",motorista:"JORGE EXEMPLO",finalidade:"CARREGAR MILHO",empresa:"LDC",status:"CARREGANDO",chegada:h(4)},
     {placa:"RST8U90",motorista:"EDSON EXEMPLO",finalidade:"CARREGAR MILHO",empresa:"FS",status:"PATIO",chegada:h(2)},
     {placa:"KLM1N23",motorista:"FABIO EXEMPLO",finalidade:"CARREGAR SOJA",empresa:"",status:"SEM ORDEM",chegada:h(4)},
-    {placa:"LMN2O34",motorista:"MARCIO EXEMPLO",finalidade:"DESCARREGAR 20.00.20",empresa:"MOSAIC",status:"DESCARREGANDO",chegada:h(2)},
+    {placa:"LMN2O34",motorista:"MARCIO EXEMPLO",finalidade:"DESCARREGAR 20.00.20",empresa:"MOSAIC FERTILIZANTES",status:"DESCARREGANDO",chegada:h(2)},
     {placa:"MNO3P45",motorista:"ALEX EXEMPLO",finalidade:"DESCARREGAR 20.00.20",empresa:"MOSAIC",status:"PATIO",chegada:h(1.5)},
     {placa:"NOP4Q56",motorista:"SERGIO EXEMPLO",finalidade:"DESCARREGAR RAÇÃO",empresa:"",status:"PATIO",chegada:h(1.2)},
     {placa:"OPQ5R67",motorista:"RICARDO EXEMPLO",finalidade:"DESCARREGAR PEDRA",empresa:"FORNECEDOR",status:"PATIO",chegada:h(.6)},
@@ -181,7 +181,7 @@ function rowDoc(d,i){
 function rowHtml(d,pos){
   const s=d.status; let p, st;
   if(s==="PATIO"){ p=`<div class="pos">${pos}º</div>`; st=`<span class="st PATIO">AGUARDANDO</span>`; }
-  else if(s==="CARREGANDO"||s==="DESCARREGANDO"){ p=`<div class="pos in">DENTRO</div>`; st=`<span class="st ${s}">${s==="CARREGANDO"?"CARREGANDO":"DESCARREG."}</span>`; }
+  else if(s==="CARREGANDO"||s==="DESCARREGANDO"){ p=`<div class="pos in">${s==="CARREGANDO"?"CARRE<br>GANDO":"DESCAR<br>REGANDO"}</div>`; st=`<span class="st ${s}">${s==="CARREGANDO"?"CARREGANDO":"DESCARREG."}</span>`; }
   else if(s==="AGUARDANDO NFE"){ p=`<div class="pos nf">NOTA</div>`; st=`<span class="st NF">AGUARDANDO NOTA</span>`; }
   else if(s==="NOTA PRONTA"){ p=`<div class="pos ok">OK</div>`; st=`<span class="st OK">NOTA PRONTA</span>`; }
   else { p=`<div class="pos so">!</div>`; st=`<span class="st SO">SEM ORDEM</span>`; }
