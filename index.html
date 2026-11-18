@@ -264,6 +264,11 @@ input.bad{border-color:var(--red,#c62828)!important;outline-color:var(--red,#c62
 @media (max-width:999px){.resumo .grp{grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:4px}.rl{border:1px solid var(--line)}}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 .prt-td{width:44px;text-align:center}
+/* Histórico: textos longos quebram linha para o status e a impressora caberem na tela */
+table.hist{font-size:13px}
+table.hist th,table.hist td{padding-left:8px;padding-right:8px}
+table.hist td:nth-child(3),table.hist td:nth-child(4),table.hist td:nth-child(5),table.hist td:nth-child(6){white-space:normal;line-height:1.25;min-width:110px;max-width:220px}
+table.hist td:nth-child(11){width:1%}
 .prt{border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:8px;width:34px;height:34px;display:inline-grid;place-items:center;cursor:pointer}
 .prt:hover{color:var(--orange);border-color:var(--orange)}
 #ticket{display:none}
@@ -404,7 +409,7 @@ input.bad{border-color:var(--red,#c62828)!important;outline-color:var(--red,#c62
       <select class="selsm" id="h-emp" aria-label="Filtrar empresa"><option value="">Todas as empresas</option></select>
       <input class="search" id="h-q" type="search" placeholder="Buscar placa, motorista, transportadora…" aria-label="Buscar">
     </div>
-    <div class="tablebox"><table>
+    <div class="tablebox"><table class="hist">
       <thead><tr><th>Chegada</th><th>Placa</th><th>Motorista</th><th>Transportadora</th><th>Finalidade</th><th>Empresa</th><th>Entrada</th><th>Fim carreg.</th><th>Saída</th><th>Perm.</th><th>Status</th><th><span class="sr">Imprimir</span></th></tr></thead>
       <tbody id="hist-body"></tbody>
     </table></div>
