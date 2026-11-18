@@ -17,7 +17,7 @@
 *{box-sizing:border-box}
 html,body{height:100%}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--fb);overflow:hidden;font-size:1.6vh}
-.wrap{height:100vh;display:grid;grid-template-rows:auto auto 1fr auto;gap:1.4vh;padding:1.6vh 1.6vw}
+.wrap{height:100vh;display:grid;grid-template-rows:auto auto 1fr auto auto;gap:1.4vh;padding:1.6vh 1.6vw}
 header{display:flex;align-items:center;gap:1.4vw}
 header img{height:6vh;background:#fff;border-radius:.8vh;padding:.5vh .8vh}
 header h1{font-family:var(--fd);font-weight:800;font-size:4.6vh;letter-spacing:.02em;margin:0;line-height:1}
@@ -83,7 +83,15 @@ em.wt{font-style:normal;color:#9CCBFF;font-weight:700}
 footer{display:flex;align-items:center;gap:1.6vw;color:var(--muted);font-size:1.9vh;flex-wrap:wrap}
 footer .lg{display:flex;align-items:center;gap:.5vw}
 footer .dot{width:1.6vh;height:1.6vh;border-radius:50%}
-footer .aviso{margin-left:auto;color:var(--ink);font-weight:700;font-size:2.1vh}
+footer .leg{display:flex;flex-wrap:wrap;gap:.6vh 1.4vw}
+.ticker{display:flex;align-items:stretch;height:5.6vh;background:var(--yellow);color:#1A1600;border-radius:1vh;overflow:hidden}
+.ticker .tag{flex:none;display:flex;align-items:center;gap:.8vw;background:#1A1600;color:var(--yellow);padding:0 1.2vw;font-family:var(--fd);font-weight:800;font-size:2.6vh;letter-spacing:.04em}
+.ticker .tag span{background:var(--yellow);color:#1A1600;border-radius:.6vh;padding:.2vh .6vw;font-size:2.4vh}
+.ticker .run{flex:1;overflow:hidden;display:flex;align-items:center;white-space:nowrap;mask-image:linear-gradient(90deg,transparent,#000 3%,#000 97%,transparent)}
+.ticker .run div{display:inline-block;padding-left:100%;animation:corre 32s linear infinite;font-family:var(--fd);font-weight:700;font-size:2.9vh;letter-spacing:.02em}
+.ticker .run b{font-weight:800;text-decoration:underline;text-decoration-thickness:.3vh;text-underline-offset:.4vh}
+.ticker .run i{font-style:normal;margin:0 2.4vw}
+@keyframes corre{from{transform:translateX(0)}to{transform:translateX(-100%)}}
 .off{position:fixed;inset:auto 1.6vw 1.6vh auto;background:var(--red);color:#fff;padding:1vh 1.4vw;border-radius:1vh;font-weight:700;font-size:2vh}
 .pg{font-size:1.9vh;color:var(--muted);font-weight:600;margin-left:.6vw}
 </style>
@@ -109,13 +117,18 @@ footer .aviso{margin-left:auto;color:var(--ink);font-weight:700;font-size:2.1vh}
   </section>
 
   <footer>
+  <div class="leg">
     <span class="lg"><span class="dot" style="background:var(--yellow)"></span>Aguardando (posição na fila)</span>
     <span class="lg"><span class="dot" style="background:var(--orange)"></span>Dentro</span>
     <span class="lg"><span class="dot" style="background:var(--blue)"></span>Aguardando documentação (tempo de espera)</span>
     <span class="lg"><span class="dot" style="background:var(--green)"></span>Liberado</span>
     <span class="lg"><span class="dot" style="background:var(--red)"></span>Sem ordem</span>
-    <span class="aviso">Siga somente pela BR-070 · Atualiza sozinho</span>
+  </div>
   </footer>
+  <div class="ticker" aria-label="Aviso aos motoristas">
+    <div class="tag">⚠ ATENÇÃO, MOTORISTAS <span>ROTA BR-070</span></div>
+    <div class="run"><div>A SEMENTES BATOVI MANTÉM ASSISTÊNCIA NA ESTRADA <b>SOMENTE PELA BR-070</b><i>•</i>NÃO NOS RESPONSABILIZAMOS POR <b>ROTAS SECUNDÁRIAS</b><i>•</i>SIGA SOMENTE PELA BR-070<i>•</i>A SEMENTES BATOVI MANTÉM ASSISTÊNCIA NA ESTRADA <b>SOMENTE PELA BR-070</b><i>•</i>NÃO NOS RESPONSABILIZAMOS POR <b>ROTAS SECUNDÁRIAS</b></div></div>
+  </div>
 </div>
 <div class="off" id="off" hidden>Sem conexão — mostrando a última atualização</div>
 <script>
