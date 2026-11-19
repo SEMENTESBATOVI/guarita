@@ -259,7 +259,7 @@ async function load(){
   if(DEMO){ regs=demo(); render(); return; }
   try{
     const ctl=new AbortController(); const t=setTimeout(()=>ctl.abort(),20000);
-    const COD=q.get("codigo")||""; const r=await fetch(API+(COD?"?codigo="+encodeURIComponent(COD):"?tv="+encodeURIComponent(TV))+"&_="+Date.now(),{signal:ctl.signal}); clearTimeout(t);
+    const r=await fetch(API+"?tv="+encodeURIComponent(TV)+"&_="+Date.now(),{signal:ctl.signal}); clearTimeout(t);
     const j=await r.json(); if(!j.ok) throw j;
     regs=j.registros||[]; $("#off").hidden=true; render();
   }catch(e){ $("#off").hidden=false; $("#off").textContent=(e&&e.erro==="codigo")?"Código da TV errado — confira o link":"Sem conexão — mostrando a última atualização"; }
