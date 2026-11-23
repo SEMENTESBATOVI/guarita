@@ -27,7 +27,9 @@ header p{margin:.3vh 0 0;color:var(--muted);font-size:2vh}
 .clock span{color:var(--muted);font-size:2vh}
 
 /* faixas de chamada */
-.calls{display:grid;grid-template-columns:1fr 1fr;gap:1.4vw}
+.calls{display:flex;gap:1.4vw}
+.calls .call{flex:1;min-width:0}
+.calls[hidden],.call[hidden]{display:none!important}
 .call{border-radius:1.4vh;padding:1.2vh 1.4vw;display:flex;align-items:center;gap:1.2vw;min-height:9vh}
 .call h2{font-family:var(--fd);font-weight:800;font-size:3.4vh;margin:0;line-height:1;white-space:nowrap}
 .call h2 small{display:block;font-size:2.1vh;font-weight:600;opacity:.9;margin-top:.4vh}
@@ -224,6 +226,8 @@ function render(){
   $("#c-ok").classList.toggle("vazio",!ok.length); if(!ok.length) $("#ok-chips").innerHTML=`<span style="font-size:2.2vh">Ninguém liberado nos últimos 30 min</span>`;
   $("#so-chips").innerHTML=so.map(d=>`<span class="chip">${placa(d.placa)}${esc(nome1(d.motorista))}</span>`).join("");
   $("#c-so").classList.toggle("vazio",!so.length); if(!so.length) $("#so-chips").innerHTML=`<span style="font-size:2.2vh">Ninguém sem ordem</span>`;
+  // as faixas só aparecem quando têm alguém; sem nenhuma, as filas ganham o espaço
+  $("#c-ok").hidden=!ok.length; $("#c-so").hidden=!so.length; $(".calls").hidden=!ok.length&&!so.length;
   const fila=open.filter(d=>d.status!=="AGUARDANDO NFE");
   const doc=open.filter(d=>d.status==="AGUARDANDO NFE").sort((a,b)=>((a.nfe||9e15)-(b.nfe||9e15))||(a.chegada-b.chegada));
   $("#n-n").dataset.base=doc.length?`${doc.length}`:"";
