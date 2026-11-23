@@ -78,6 +78,10 @@ header p{margin:.3vh 0 0;color:var(--muted);font-size:2vh}
 .st.SO{background:rgba(229,83,75,.18);color:#FFB3AC}
 .col>h3 small{font-size:1.7vh;color:var(--muted);font-weight:600;letter-spacing:.04em;text-transform:uppercase}
 .col.soja>h3{color:#C8E66B}.col.milho>h3{color:var(--yellow)}
+.tot{display:flex;flex-wrap:wrap;gap:.6vh .5vw;padding:.8vh .9vw;border-bottom:1px solid var(--line);background:rgba(255,255,255,.03)}
+.tot:empty{display:none}
+.tot span{display:inline-flex;align-items:center;gap:.5vw;background:#262E21;border:1px solid var(--line);border-radius:99px;padding:.3vh .3vh .3vh .8vw;font-family:var(--fd);font-weight:700;font-size:1.75vh;letter-spacing:.02em}
+.tot b{background:var(--ink);color:#14180F;border-radius:99px;min-width:3.2vh;height:2.8vh;display:grid;place-items:center;font-size:1.9vh;padding:0 .5vh}
 .col.doc{border-color:rgba(75,155,232,.55)}
 .col.doc>h3{color:#9CCBFF}
 em.wt{font-style:normal;color:#9CCBFF;font-weight:700}
@@ -114,8 +118,8 @@ footer .leg{display:flex;flex-wrap:wrap;gap:.6vh 1.4vw}
   </section>
 
   <section class="grid">
-    <div class="col soja"><h3>🌱 SOJA <small>carregar</small> <span class="n" id="n-c"></span></h3><div class="list" id="l-c"></div></div>
-    <div class="col milho"><h3>🌽 MILHO <small>carregar</small> <span class="n" id="n-m"></span></h3><div class="list" id="l-m"></div></div>
+    <div class="col soja"><h3>🌱 SOJA <small>carregar</small> <span class="n" id="n-c"></span></h3><div class="tot" id="t-c"></div><div class="list" id="l-c"></div></div>
+    <div class="col milho"><h3>🌽 MILHO <small>carregar</small> <span class="n" id="n-m"></span></h3><div class="tot" id="t-m"></div><div class="list" id="l-m"></div></div>
     <div class="col doc"><h3 title="Aguardando nota fiscal">📄 AGUARDANDO NF-E <span class="n" id="n-n"></span></h3><div class="list" id="l-n"></div></div>
     <div class="col"><h3>⬇ DESCARGA <span class="n" id="n-d"></span></h3><div class="list" id="l-d"></div></div>
   </section>
@@ -152,26 +156,17 @@ const LIB_MIN=30;
 const ABERTOS=["PATIO","SEM ORDEM","CARREGANDO","DESCARREGANDO","AGUARDANDO NFE","NOTA PRONTA"];
 
 function demo(){
-  const now=Date.now(), h=x=>now-x*3600e3;
+  const now=Date.now(), h=x=>now-x*3600e3, S=(p,m,e,st,c)=>({placa:p,motorista:m,finalidade:"CARREGAR SOJA",empresa:e,status:st,chegada:h(c)});
   return [
-    {placa:"ABC1D23",motorista:"JOSE EXEMPLO",finalidade:"CARREGAR SOJA",empresa:"BUNGE ALIMENTOS",status:"CARREGANDO",chegada:h(2)},
-    {placa:"BCD2E34",motorista:"CARLOS EXEMPLO",finalidade:"CARREGAR SOJA",empresa:"BUNGE ALIMENTOS",status:"CARREGANDO",chegada:h(2.1)},
-    {placa:"CDE3F45",motorista:"ANTONIO EXEMPLO",finalidade:"CARREGAR SOJA",empresa:"BUNGE",status:"AGUARDANDO NFE",chegada:h(10.5),nfe:h(.5)},
-    {placa:"DEF4G56",motorista:"LUIZ EXEMPLO",finalidade:"CARREGAR SOJA",empresa:"AGRICOLA ALVORADA",status:"PATIO",chegada:h(12.3)},
-    {placa:"EFG5H67",motorista:"PAULO EXEMPLO",finalidade:"CARREGAR SOJA",empresa:"COFCO",status:"AGUARDANDO NFE",chegada:h(9),nfe:h(1.2)},
-    {placa:"FGH6I78",motorista:"PEDRO EXEMPLO",finalidade:"CARREGAR SOJA",empresa:"LDC",status:"PATIO",chegada:h(1)},
-    {placa:"GHI7J89",motorista:"JOAO EXEMPLO",finalidade:"CARREGAR SOJA",empresa:"COFCO",status:"AGUARDANDO NFE",chegada:h(16.8),nfe:h(15.5)},
-    {placa:"HIJ8K90",motorista:"MARCOS EXEMPLO",finalidade:"CARREGAR SOJA",empresa:"LDC",status:"LIBERADO",chegada:h(6),saida:now-8*60e3},
-    {placa:"IJK9L01",motorista:"RAFAEL EXEMPLO",finalidade:"CARREGAR MILHO",empresa:"FS",status:"LIBERADO",chegada:h(5),saida:now-3*60e3},
-    {placa:"JKL0M12",motorista:"DIEGO EXEMPLO",finalidade:"CARREGAR MILHO",empresa:"FS",status:"PATIO",chegada:h(3)},
-    {placa:"QRS7T89",motorista:"JORGE EXEMPLO",finalidade:"CARREGAR MILHO",empresa:"LDC",status:"CARREGANDO",chegada:h(4)},
-    {placa:"RST8U90",motorista:"EDSON EXEMPLO",finalidade:"CARREGAR MILHO",empresa:"FS",status:"PATIO",chegada:h(2)},
-    {placa:"KLM1N23",motorista:"FABIO EXEMPLO",finalidade:"CARREGAR SOJA",empresa:"",status:"SEM ORDEM",chegada:h(4)},
-    {placa:"LMN2O34",motorista:"MARCIO EXEMPLO",finalidade:"DESCARREGAR 20.00.20",empresa:"MOSAIC FERTILIZANTES",status:"DESCARREGANDO",chegada:h(2)},
-    {placa:"MNO3P45",motorista:"ALEX EXEMPLO",finalidade:"DESCARREGAR 20.00.20",empresa:"MOSAIC",status:"PATIO",chegada:h(1.5)},
-    {placa:"NOP4Q56",motorista:"SERGIO EXEMPLO",finalidade:"DESCARREGAR RAÇÃO",empresa:"",status:"PATIO",chegada:h(1.2)},
-    {placa:"OPQ5R67",motorista:"RICARDO EXEMPLO",finalidade:"DESCARREGAR PEDRA",empresa:"FORNECEDOR",status:"PATIO",chegada:h(.6)},
-    {placa:"PQR6S78",motorista:"VALDIR EXEMPLO",finalidade:"DESCARREGAR UREIA",empresa:"YARA",status:"PATIO",chegada:h(.4)}
+    S("ABC1D23","PEDRO EXEMPLO","COFCO INTERNACIONAL","PATIO",9), S("BCD2E34","ROBERTO EXEMPLO","COFCO INTERNACIONAL","PATIO",8.5),
+    S("CDE3F45","MARIA EXEMPLO","COFCO INTERNACIONAL","PATIO",8), S("DEF4G56","CARLOS EXEMPLO","BUNGE ALIMENTOS","PATIO",7.5),
+    S("EFG5H67","ANTONIO EXEMPLO","BUNGE ALIMENTOS","PATIO",7), S("FGH6I78","DIEGO EXEMPLO","BUNGE ALIMENTOS","PATIO",6.5),
+    S("GHI7J89","WILSON EXEMPLO","COFCO INTERNACIONAL","PATIO",6), S("HIJ8K90","LUIZ EXEMPLO","LDC","CARREGANDO",3),
+    {placa:"IJK9L01",motorista:"JORGE EXEMPLO",finalidade:"CARREGAR MILHO",empresa:"FS",status:"PATIO",chegada:h(2)},
+    {placa:"JKL0M12",motorista:"EDSON EXEMPLO",finalidade:"CARREGAR MILHO",empresa:"LDC",status:"PATIO",chegada:h(1.5)},
+    {placa:"KLM1N23",motorista:"FABIO EXEMPLO",finalidade:"CARREGAR MILHO",empresa:"FS",status:"CARREGANDO",chegada:h(3)},
+    {placa:"LMN2O34",motorista:"JOSE EXEMPLO",finalidade:"CARREGAR SOJA",empresa:"COFCO INTERNACIONAL",status:"AGUARDANDO NFE",chegada:h(10),nfe:h(1)},
+    {placa:"MNO3P45",motorista:"MARCIO EXEMPLO",finalidade:"DESCARREGAR 20.00.20",empresa:"MOSAIC FERTILIZANTES",status:"DESCARREGANDO",chegada:h(2)}
   ];
 }
 
@@ -204,6 +199,10 @@ function lista(el, nEl, docs, semTitulo){
     arr.forEach(d=>linhas.push(rowHtml(d, d.status==="PATIO"?++pos:0)));
   });
   nEl.dataset.base=docs.length?`${docs.length}`:"";
+  // total por empresa no topo da coluna
+  const tEl=document.getElementById("t-"+nEl.id.slice(2));
+  if(tEl){ const em=new Map(); docs.forEach(d=>{ const e=(d.empresa||"SEM EMPRESA").replace(/\s+(INTERNACIONAL|ALIMENTOS|BRASIL|S\.?A\.?|LTDA)\b.*$/,""); em.set(e,(em.get(e)||0)+1); });
+    tEl.innerHTML=[...em.entries()].sort((a,b)=>b[1]-a[1]).map(([e,n])=>`<span>${esc(e)}<b>${n}</b></span>`).join(""); }
   return linhas;
 }
 function paginar(el, linhas){
