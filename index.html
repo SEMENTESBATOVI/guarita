@@ -381,6 +381,7 @@ table.hist td:nth-child(11){width:1%}
         <label for="f-emp">Empresa</label>
         <input id="f-emp" list="dl-emp" autocomplete="off" autocapitalize="characters" placeholder="Ex.: LDC, COFCO, YARA…">
         <datalist id="dl-emp"></datalist>
+        <span class="hint tr-msg" id="f-emp-msg" hidden></span>
         <span class="hint">Carregar: quem compra. Descarregar: quem mandou o produto. Pode ficar em branco.</span>
       </div>
       <label class="inline" for="f-semordem" id="f-semordem-l" hidden style="font-weight:600;cursor:pointer"><input type="checkbox" id="f-semordem" style="width:22px;height:22px"> Chegou <b>sem ordem</b> de carregamento</label>
@@ -449,7 +450,7 @@ table.hist td:nth-child(11){width:1%}
       <div class="field"><label for="e-transp">Transportadora</label><input id="e-transp" list="dl-transp" autocapitalize="characters"><span class="hint tr-msg" id="e-transp-msg" hidden></span></div>
       <div class="field"><label for="e-fin">Finalidade</label><select id="e-fin"></select></div>
     </div>
-    <div class="field"><label for="e-emp">Empresa</label><input id="e-emp" list="dl-emp" autocapitalize="characters" placeholder="Cliente ou fornecedor"></div>
+    <div class="field"><label for="e-emp">Empresa</label><input id="e-emp" list="dl-emp" autocapitalize="characters" placeholder="Cliente ou fornecedor"><span class="hint tr-msg" id="e-emp-msg" hidden></span></div>
     <div class="row2">
       <div class="field"><label for="e-cheg">Chegada</label><input id="e-cheg" type="datetime-local"></div>
       <div class="field"><label for="e-ent">Entrada</label><input id="e-ent" type="datetime-local"></div>
@@ -628,10 +629,17 @@ function checkTransp(inp, msg, original){
   const v=normT(inp.value), ok = !v || transpCad(v)!==null || (original!=null && v===normT(original));
   msg.hidden = ok; msg.textContent = ok ? "" : MSG_TR; inp.classList.toggle("bad", !ok); return ok;
 }
+// Empresa (opcional) só pode ser uma das cadastradas na aba LISTAS (coluna E)
+const empCad = v => { const n=normT(v); if(!n) return ""; const L=S.listas.empresas||[]; if(!L.length) return n; return L.find(t=>normT(t)===n) || null; };
+const MSG_EMP = "Empresa não cadastrada. Escolha uma da lista, deixe em branco ou peça para cadastrar na aba LISTAS da planilha.";
+function checkEmp(inp, msg, original){
+  const v=normT(inp.value), ok = !v || empCad(v)!==null || (original!=null && v===normT(original));
+  msg.hidden = ok; msg.textContent = ok ? "" : MSG_EMP; inp.classList.toggle("bad", !ok); return ok;
+}
 function fillListas(){
   const set = new Set(S.listas.transportadoras||[]);
   $("#dl-transp").innerHTML = [...set].sort().map(t=>`<option value="${esc(t)}">`).join("");
-  const es = new Set(S.listas.empresas||[]); S.docs.forEach(d=>{ const e=empresaDe(d); if(e) es.add(e); });
+  const es = new Set(S.listas.empresas||[]);
   $("#dl-emp").innerHTML = [...es].sort().map(t=>`<option value="${esc(t)}">`).join("");
   fillEmpSel($("#h-emp"),"hEmp"); fillEmpSel($("#p-emp"),"pEmp");
   const keep=$("#f-fin").value; finOptions($("#f-fin"), keep||undefined);
@@ -963,7 +971,7 @@ fPlaca.addEventListener("input", ()=>{
     h.className="hint"; h.textContent=`Última visita: ${dmhm(last.chegada)} · ${last.transportadora||""} · ${last.finalidade||""}`;
     if(!$("#f-mot").value) $("#f-mot").value=last.motorista||"";
     if(!$("#f-transp").value) $("#f-transp").value=last.transportadora||"";
-    if(!$("#f-emp").value) $("#f-emp").value=empresaDe(last)||"";
+    if(!$("#f-emp").value) $("#f-emp").value=empCad(empresaDe(last))||"";
   } else { h.className="hint"; h.textContent="Primeira visita desta placa nos últimos "+S.dias+" dias."; }
   const aberto=S.docs.find(d=>d.placa===p && isOpen(d));
   if(aberto){ dup.hidden=false; dup.textContent=`${p} já está no pátio desde ${dmhm(aberto.chegada)} (${SLABEL[aberto.status]}). Se for outra viagem, toque de novo em registrar.`; }
@@ -977,11 +985,12 @@ function newId(){ return "A"+Date.now().toString(36).toUpperCase()+Math.random()
 let pendingId=null;
 $("#form-nova").addEventListener("submit", async e=>{
   e.preventDefault();
-  const p=normPlaca(fPlaca.value), mot=$("#f-mot").value.trim().toUpperCase(), tr=transpCad($("#f-transp").value)??normT($("#f-transp").value), fin=$("#f-fin").value, emp=$("#f-emp").value.trim().toUpperCase(), obs=$("#f-obs").value.trim();
+  const p=normPlaca(fPlaca.value), mot=$("#f-mot").value.trim().toUpperCase(), tr=transpCad($("#f-transp").value)??normT($("#f-transp").value), fin=$("#f-fin").value, emp=empCad($("#f-emp").value)??normT($("#f-emp").value), obs=$("#f-obs").value.trim();
   if(!placaOk(p)){ toast("Confira a placa: use ABC1D23 ou ABC1234.", true); fPlaca.focus(); return; }
   if(!mot){ toast("Informe o motorista.", true); $("#f-mot").focus(); return; }
   if(!tr){ toast("Informe a transportadora.", true); $("#f-transp").focus(); return; }
   if(transpCad(tr)===null){ checkTransp($("#f-transp"),$("#f-transp-msg")); toast(MSG_TR, true); $("#f-transp").focus(); return; }
+  if(empCad(emp)===null){ checkEmp($("#f-emp"),$("#f-emp-msg")); toast(MSG_EMP, true); $("#f-emp").focus(); return; }
   if(!fin){ toast("Escolha a finalidade.", true); $("#f-fin").focus(); return; }
   const cheg = S.chegManual ? fromLocalInput($("#f-cheg").value) : Date.now();
   if(!cheg){ toast("Informe o horário de chegada.", true); return; }
@@ -1027,7 +1036,7 @@ function openEdit(d){
   S.editing=d.id; S.delArm=false; $("#ed-del").textContent="Excluir";
   $("#ed-plate").innerHTML=plate(d.placa,true);
   $("#e-placa").value=d.placa||""; $("#e-status").value=STATUS.includes(d.status)?d.status:"OUTRO";
-  $("#e-mot").value=d.motorista||""; $("#e-transp").value=d.transportadora||""; S.editOrigTr=d.transportadora||""; checkTransp($("#e-transp"),$("#e-transp-msg"),S.editOrigTr); $("#e-emp").value=d.empresa||"";
+  $("#e-mot").value=d.motorista||""; $("#e-transp").value=d.transportadora||""; S.editOrigTr=d.transportadora||""; checkTransp($("#e-transp"),$("#e-transp-msg"),S.editOrigTr); $("#e-emp").value=d.empresa||""; S.editOrigEmp=d.empresa||""; checkEmp($("#e-emp"),$("#e-emp-msg"),S.editOrigEmp);
   finOptions($("#e-fin"), d.finalidade);
   $("#e-cheg").value=toLocalInput(d.chegada); $("#e-ent").value=toLocalInput(d.entrada); $("#e-sai").value=toLocalInput(d.saida); $("#e-nfe").value=toLocalInput(d.nfe); $("#e-nfe-row").hidden = !isCarga(d.finalidade) && !d.nfe;
   $("#e-obs").value=d.obs||""; calcPerm();
@@ -1055,9 +1064,11 @@ $("#form-ed").addEventListener("submit", async e=>{
     (OPEN.has(st)&&sa)?"Veículo no pátio não tem saída. Apague a saída ou mude o status.":"";
   const trE=normT($("#e-transp").value);
   if(trE && trE!==normT(d.transportadora) && transpCad(trE)===null){ er.hidden=false; er.textContent=MSG_TR; $("#e-transp").focus(); return; }
+  const emE=normT($("#e-emp").value);
+  if(emE && emE!==normT(d.empresa) && empCad(emE)===null){ er.hidden=false; er.textContent=MSG_EMP; $("#e-emp").focus(); return; }
   if(bad){ er.hidden=false; er.textContent=bad; return; }
   closeEdit();
-  await upd(d,{placa:p, status:st, motorista:$("#e-mot").value.trim().toUpperCase(), transportadora:(transpCad($("#e-transp").value)||normT($("#e-transp").value)), finalidade:$("#e-fin").value, empresa:$("#e-emp").value.trim().toUpperCase(), chegada:c, entrada:en, saida:sa, nfe:nf, obs:$("#e-obs").value.trim()}, "Registro atualizado");
+  await upd(d,{placa:p, status:st, motorista:$("#e-mot").value.trim().toUpperCase(), transportadora:(transpCad($("#e-transp").value)||normT($("#e-transp").value)), finalidade:$("#e-fin").value, empresa:(empCad($("#e-emp").value)||normT($("#e-emp").value)), chegada:c, entrada:en, saida:sa, nfe:nf, obs:$("#e-obs").value.trim()}, "Registro atualizado");
 });
 $("#ed-del").addEventListener("click", async ()=>{
   if(!S.delArm){ S.delArm=true; $("#ed-del").textContent="Toque de novo para excluir"; return; }
@@ -1067,6 +1078,9 @@ $("#ed-del").addEventListener("click", async ()=>{
 });
 
 $("#f-transp").addEventListener("input",()=>checkTransp($("#f-transp"),$("#f-transp-msg")));
+$("#f-emp").addEventListener("input",()=>checkEmp($("#f-emp"),$("#f-emp-msg")));
+$("#f-emp").addEventListener("change",()=>{ const c=empCad($("#f-emp").value); if(c) $("#f-emp").value=c; checkEmp($("#f-emp"),$("#f-emp-msg")); });
+$("#e-emp").addEventListener("input",()=>checkEmp($("#e-emp"),$("#e-emp-msg"),S.editOrigEmp));
 $("#f-transp").addEventListener("change",()=>{ const c=transpCad($("#f-transp").value); if(c) $("#f-transp").value=c; checkTransp($("#f-transp"),$("#f-transp-msg")); });
 $("#e-transp").addEventListener("input",()=>checkTransp($("#e-transp"),$("#e-transp-msg"),S.editOrigTr));
 
