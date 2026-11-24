@@ -272,8 +272,31 @@ table.hist td:nth-child(11){width:1%}
 .prt{border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:8px;width:34px;height:34px;display:inline-grid;place-items:center;cursor:pointer}
 .prt:hover{color:var(--orange);border-color:var(--orange)}
 #ticket{display:none}
+#relat{display:none}
 @media print{
   @page{margin:6mm}
+  body.imp-rel{background:#fff!important}
+  body.imp-rel>*:not(#relat){display:none!important}
+  body.imp-rel::before{display:none!important}
+  body.imp-rel #relat{display:block!important;color:#000;font-family:"Barlow",Arial,sans-serif;font-size:9.5pt;line-height:1.25}
+  #relat .rl-top{display:flex;align-items:center;gap:4mm;border-bottom:0.6mm solid #000;padding-bottom:2mm;margin-bottom:3mm}
+  #relat .rl-top img{height:11mm;filter:grayscale(1)}
+  #relat h1{font-family:"Barlow Condensed",Arial,sans-serif;font-size:17pt;margin:0;line-height:1}
+  #relat .rl-top p{margin:.5mm 0 0;font-size:9pt}
+  #relat .rl-top .rl-q{margin-left:auto;text-align:right;font-size:9pt}
+  #relat .rl-tot{display:flex;flex-wrap:wrap;gap:1.5mm 5mm;font-size:9.5pt;margin-bottom:3mm}
+  #relat .rl-tot b{font-size:11pt}
+  #relat h2{font-family:"Barlow Condensed",Arial,sans-serif;font-size:13pt;margin:4mm 0 1.2mm;padding:0.8mm 2mm;background:#E6E6E6;border-left:1.6mm solid #000;break-after:avoid}
+  #relat table{width:100%;border-collapse:collapse}
+  #relat th{font-size:7.5pt;text-transform:uppercase;letter-spacing:.03em;text-align:left;border-bottom:0.4mm solid #000;padding:1mm 1.2mm}
+  #relat td{border-bottom:0.2mm solid #999;padding:1.3mm 1.2mm;vertical-align:middle}
+  #relat tr{break-inside:avoid}
+  #relat .pl{font-family:"Barlow Condensed",Arial,sans-serif;font-weight:700;font-size:12pt;letter-spacing:.04em;white-space:nowrap}
+  #relat .n{text-align:center;font-weight:700;width:9mm}
+  #relat .ck{width:8mm;text-align:center}
+  #relat .ck span{display:inline-block;width:4mm;height:4mm;border:0.35mm solid #000}
+  #relat .st{font-size:8pt;font-weight:700;white-space:nowrap}
+  #relat .rl-rod{margin-top:4mm;font-size:7.5pt;text-align:right}
   body.imprimindo{background:#fff!important}
   body.imprimindo>*:not(#ticket){display:none!important}
   body.imprimindo::before{display:none!important}
@@ -341,7 +364,7 @@ table.hist td:nth-child(11){width:1%}
   <div id="banner"></div>
 
   <section class="view" id="v-patio">
-    <div class="sec-h"><h2>No pátio agora</h2><span class="sub" id="patio-sub"></span><span class="sp"><button class="btn primary" data-go="nova">+ Nova chegada</button></span></div>
+    <div class="sec-h"><h2>No pátio agora</h2><span class="sub" id="patio-sub"></span><span class="sp"><button class="btn" id="btn-imp-patio" title="Imprimir a lista de tudo que está no pátio, com horário de chegada">🖨 Imprimir pátio</button> <button class="btn primary" data-go="nova">+ Nova chegada</button></span></div>
     <div class="patio-grid">
       <aside class="resumo" id="resumo" aria-label="Resumo do pátio"></aside>
       <div class="patio-main">
@@ -477,6 +500,7 @@ table.hist td:nth-child(11){width:1%}
 </dialog>
 
 <div id="toast" class="toast" hidden role="status"></div>
+<div id="relat"></div>
 <div id="ticket" aria-hidden="true"></div>
 
 <script>
@@ -918,7 +942,35 @@ function imprimirTicket(d){
   const img=$("#ticket img");
   if(img && !img.complete){ img.onload=go; img.onerror=go; setTimeout(go,1500); } else go();
 }
-window.addEventListener("afterprint", ()=>document.body.classList.remove("imprimindo"));
+window.addEventListener("afterprint", ()=>document.body.classList.remove("imprimindo","imp-rel"));
+
+/* ---------- impressão do pátio (A4): caminhões para carregar, por produto, em ordem de chegada ---------- */
+function imprimirPatio(){
+  const ORD={"PATIO":0,"SEM ORDEM":1,"CARREGANDO":2,"DESCARREGANDO":2,"AGUARDANDO NFE":3};
+  const lista=S.docs.filter(d=>isOpen(d));
+  const nomeG=d=>(isCarga(d.finalidade)?"CARREGAR ":"DESCARREGAR ")+produto(d.finalidade);
+  const grupos=new Map(); lista.forEach(d=>{ const g=nomeG(d); if(!grupos.has(g)) grupos.set(g,[]); grupos.get(g).push(d); });
+  const ordemG=g=>g==="CARREGAR SOJA"?0:g==="CARREGAR MILHO"?1:g.startsWith("CARREGAR")?2:3;
+  const tot=(arr,fn)=>{ const m=new Map(); arr.forEach(d=>{const k=fn(d)||"SEM EMPRESA"; m.set(k,(m.get(k)||0)+1);}); return [...m.entries()].sort((a,b)=>b[1]-a[1]).map(([k,n])=>`${esc(k)} <b>${n}</b>`).join(" · "); };
+  const espera=d=>d.chegada?dur(Date.now()-d.chegada)+" h":"–";
+  const secoes=[...grupos.entries()].sort((a,b)=>ordemG(a[0])-ordemG(b[0])||b[1].length-a[1].length).map(([g,arr])=>{
+    arr.sort((a,b)=>((ORD[a.status]??9)-(ORD[b.status]??9))||((a.chegada||0)-(b.chegada||0)));
+    let pos=0;
+    const linhas=arr.map(d=>`<tr><td class="n">${d.status==="PATIO"?(++pos)+"º":"–"}</td><td class="pl">${esc(d.placa)}</td><td>${esc(d.motorista||"")}</td><td>${esc(d.transportadora||"")}</td><td>${esc(empresaDe(d))}</td><td style="white-space:nowrap">${esc(dataHora(d.chegada))}</td><td style="white-space:nowrap">${espera(d)}</td><td class="st">${esc(SLABEL[d.status]||d.status)}</td><td class="ck"><span></span></td></tr>`).join("");
+    return `<h2>${esc(g)} — ${arr.length} veículo${arr.length>1?"s":""}${arr.some(d=>empresaDe(d))?` <small style="font-weight:600;font-size:9.5pt">(${tot(arr,empresaDe)})</small>`:""}</h2>
+      <table><thead><tr><th>Fila</th><th>Placa</th><th>Motorista</th><th>Transportadora</th><th>Empresa</th><th>Chegada</th><th>Espera</th><th>Status</th><th>OK</th></tr></thead><tbody>${linhas}</tbody></table>`;
+  }).join("");
+  $("#relat").innerHTML=`
+    <div class="rl-top"><img src="logo-batovi.png" alt=""><div><h1>VEÍCULOS NO PÁTIO</h1><p>Guarita · Fazenda Batovi</p></div>
+      <div class="rl-q">${esc(dataHora(Date.now()))}${S.nome?"<br>"+esc(S.nome):""}</div></div>
+    <div class="rl-tot"><span>Total: <b>${lista.length}</b></span><span>Carregar: <b>${lista.filter(d=>isCarga(d.finalidade)).length}</b></span><span>Descarregar: <b>${lista.filter(d=>!isCarga(d.finalidade)).length}</b></span><span>Na fila: <b>${lista.filter(d=>d.status==="PATIO").length}</b></span><span>Carregando/descarregando: <b>${lista.filter(d=>/CARREGANDO/.test(d.status)).length}</b></span><span>Aguardando NF-e: <b>${lista.filter(d=>d.status==="AGUARDANDO NFE").length}</b></span><span>Sem ordem: <b>${lista.filter(d=>d.status==="SEM ORDEM").length}</b></span></div>
+    ${secoes||"<p>Nenhum veículo no pátio agora.</p>"}
+    <div class="rl-rod">Fila = posição por ordem de chegada entre os que aguardam · Espera = tempo desde a chegada</div>`;
+  document.body.classList.add("imp-rel");
+  let feito=false; const go=()=>{ if(feito) return; feito=true; window.print(); };
+  const img=$("#relat img"); if(img && !img.complete){ img.onload=go; img.onerror=go; setTimeout(go,1500); } else go();
+}
+$("#btn-imp-patio").addEventListener("click", imprimirPatio);
 $("#ed-print").addEventListener("click", ()=>imprimirTicket(byId(S.editing)));
 
 /* ---------- gravação ---------- */
