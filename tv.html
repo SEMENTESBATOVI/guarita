@@ -17,7 +17,8 @@
 *{box-sizing:border-box}
 html,body{height:100%}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--fb);overflow:hidden;font-size:1.6vh}
-.wrap{height:100vh;display:grid;grid-template-rows:auto auto auto 1fr auto;gap:1.4vh;padding:1.6vh 1.6vw}
+/* coluna flexível: as filas ocupam o espaço que sobra e a legenda fica sempre embaixo */
+.wrap{height:100vh;display:flex;flex-direction:column;gap:1.4vh;padding:1.6vh 1.6vw}
 header{display:flex;align-items:center;gap:1.4vw}
 header img{height:6vh;background:#fff;border-radius:.8vh;padding:.5vh .8vh}
 header h1{font-family:var(--fd);font-weight:800;font-size:4.6vh;letter-spacing:.02em;margin:0;line-height:1}
@@ -63,7 +64,7 @@ header p{margin:.3vh 0 0;color:var(--muted);font-size:2vh}
 .chip .placa i{font-size:.8vh;line-height:1.2vh}
 
 /* filas */
-.grid{display:grid;grid-template-columns:1fr 1fr 1.05fr 1fr;gap:1.4vw;min-height:0}
+.grid{flex:1;display:grid;grid-template-columns:1fr 1fr 1.05fr 1fr;gap:1.4vw;min-height:0}
 .col{background:var(--panel);border:1px solid var(--line);border-radius:1.6vh;display:flex;flex-direction:column;min-height:0;overflow:hidden}
 .col>h3{margin:0;padding:1.2vh 1.2vw;font-family:var(--fd);font-weight:800;font-size:3vh;white-space:nowrap;letter-spacing:.04em;display:flex;align-items:center;gap:.8vw;border-bottom:1px solid var(--line)}
 .col>h3 .n{margin-left:auto;font-size:1.9vh;color:var(--muted);font-weight:600}
@@ -101,6 +102,7 @@ em.wt{font-style:normal;color:#9CCBFF;font-weight:700}
 .pos.nf{font-size:3.2vh}
 .vazio-l{padding:4vh 1.2vw;color:var(--muted);font-size:2.4vh;text-align:center}
 
+footer{margin-top:auto}
 footer{display:flex;align-items:center;gap:1.6vw;color:var(--muted);font-size:1.9vh;flex-wrap:wrap}
 footer .lg{display:flex;align-items:center;gap:.5vw}
 footer .dot{width:1.6vh;height:1.6vh;border-radius:50%}
