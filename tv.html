@@ -25,6 +25,8 @@ header h1{font-family:var(--fd);font-weight:800;font-size:4.6vh;letter-spacing:.
 header p{margin:.3vh 0 0;color:var(--muted);font-size:2vh}
 .clock{margin-left:auto;text-align:right;font-family:var(--fd)}
 .clock b{display:block;font-size:6.4vh;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
+.clock em{display:block;font-style:normal;font-family:var(--fb);font-size:1.6vh;color:var(--green);margin-top:.3vh}
+.clock em.parado{color:var(--red);font-weight:700}
 .clock span{color:var(--muted);font-size:2vh}
 
 /* faixas de chamada */
@@ -83,19 +85,29 @@ header p{margin:.3vh 0 0;color:var(--muted);font-size:2vh}
 .pos.so{background:var(--red);color:#2B0705;font-size:1.7vh}
 .who b{display:block;font-family:var(--fd);font-weight:700;font-size:2.15vh;line-height:1.05}
 .who{min-width:0}.who b,.who span{white-space:normal;overflow-wrap:normal}
-.who span{display:block;color:var(--muted);font-size:1.55vh;line-height:1.2}
+.who span{display:block;color:#C9D2BC;font-size:1.75vh;line-height:1.2}
 .st{font-family:var(--fd);font-weight:800;font-size:2.2vh;padding:.6vh .9vw;border-radius:99px;white-space:nowrap;letter-spacing:.03em}
 .st.PATIO{background:rgba(242,210,15,.16);color:var(--yellow)}
 .st.CARREGANDO,.st.DESCARREGANDO{background:rgba(240,122,34,.18);color:#FFA867}
 .st.NF{background:rgba(75,155,232,.18);color:#9CCBFF}
 .st.OK{background:var(--green);color:#06210F}
 .st.SO{background:rgba(229,83,75,.18);color:#FFB3AC}
+.col>h3 .hi{width:3.2vh;height:3.2vh;flex:none}
 .col>h3 small{font-size:1.7vh;color:var(--muted);font-weight:600;letter-spacing:.04em;text-transform:uppercase}
 .col.soja>h3{color:#C8E66B}.col.milho>h3{color:var(--yellow)}
 .tot{display:flex;flex-wrap:wrap;gap:.6vh .5vw;padding:.8vh .9vw;border-bottom:1px solid var(--line);background:rgba(255,255,255,.03)}
 .tot:empty{display:none}
 .tot span{display:inline-flex;align-items:center;gap:.5vw;background:#262E21;border:1px solid var(--line);border-radius:99px;padding:.3vh .3vh .3vh .8vw;font-family:var(--fd);font-weight:700;font-size:1.75vh;letter-spacing:.02em}
 .tot b{background:var(--ink);color:#14180F;border-radius:99px;min-width:3.2vh;height:2.8vh;display:grid;place-items:center;font-size:1.9vh;padding:0 .5vh}
+.who .cheg{display:flex;align-items:center;gap:.35vw;margin-top:.3vh;color:var(--ink);font-family:var(--fd);font-weight:700;font-size:1.8vh;letter-spacing:.02em;white-space:nowrap}
+.who .l1{display:flex;align-items:center;gap:.5vw;flex-wrap:wrap}
+.who .l1 b{flex:1 1 auto;min-width:0}
+.who .l1 .cheg{margin:0;flex:none}
+.who .cheg.old{color:#FF8A80}.who .cheg.old svg{color:#FF8A80}
+em.wt.warn{color:var(--yellow)!important}em.wt.late{color:#FF8A80!important}
+.who .cheg svg{width:1.7vh;height:1.7vh;flex:none;color:var(--muted)}
+.who .cheg small{color:var(--muted);font-size:1.4vh;font-weight:700;letter-spacing:.04em}
+.who .cheg.sem{color:#FFB3AC}
 .col.doc{border-color:rgba(75,155,232,.55)}
 .col.doc>h3{color:#9CCBFF}
 em.wt{font-style:normal;color:#9CCBFF;font-weight:700}
@@ -117,6 +129,27 @@ footer .leg{display:flex;flex-wrap:wrap;gap:.6vh 1.4vw}
 @keyframes corre{from{transform:translateX(0)}to{transform:translateX(-100%)}}
 .off{position:fixed;inset:auto 1.6vw 1.6vh auto;background:var(--red);color:#fff;padding:1vh 1.4vw;border-radius:1vh;font-weight:700;font-size:2vh}
 .pg{font-size:1.9vh;color:var(--muted);font-weight:600;margin-left:.6vw}
+
+/* modo compacto: cabem 10 caminhões por coluna */
+.wrap{gap:1vh!important;padding:1.2vh 1.4vw!important}
+header img{height:5vh} header h1{font-size:4vh} header p{font-size:1.7vh}
+.clock b{font-size:5.2vh}
+.hoje .k{padding:.5vh .9vw} .hoje .k b{font-size:3.8vh} .hoje .k span{font-size:1.45vh} .hoje .k small{font-size:1.45vh}
+.col>h3{padding:.75vh 1vw;font-size:2.6vh}
+.tot{padding:.45vh .8vw} .tot span{font-size:1.55vh} .tot b{height:2.3vh;min-width:2.7vh;font-size:1.6vh}
+.grp{padding:.35vh 1vw .1vh;font-size:1.9vh}
+.row{padding:.42vh .6vw}
+.pos{height:4.1vh;font-size:2.7vh;border-radius:2.05vh}
+.placa i{font-size:.75vh;line-height:1.15vh}
+.placa b{font-size:2.3vh;line-height:2.8vh}
+.row .placa{width:11.4vh}
+.row,.row.r3{grid-template-columns:9.4vh 11.4vh minmax(0,1fr)}
+.who b{font-size:2vh} .who span{font-size:1.55vh;line-height:1.15}
+.who .cheg{font-size:1.65vh;margin-top:0} .who .cheg svg{width:1.5vh;height:1.5vh}
+.who .l1{flex-wrap:nowrap!important} .who .l1 b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.who span{white-space:nowrap!important;overflow:hidden;text-overflow:ellipsis}
+.who b{font-size:1.95vh} .who .l1{gap:.35vw}
+footer{font-size:1.6vh}
 </style>
 </head>
 <body>
@@ -124,7 +157,7 @@ footer .leg{display:flex;flex-wrap:wrap;gap:.6vh 1.4vw}
   <header>
     <img src="logo-batovi.png" alt="Sementes Batovi">
     <div><h1>MOVIMENTO DO PÁTIO</h1><p>Guarita Fazenda Batovi</p></div>
-    <div class="clock"><b id="hora">--:--</b><span id="data"></span></div>
+    <div class="clock"><b id="hora">--:--</b><span id="data"></span><em id="atu">aguardando dados…</em></div>
   </header>
 
   <section class="hoje" id="hoje">
@@ -133,7 +166,7 @@ footer .leg{display:flex;flex-wrap:wrap;gap:.6vh 1.4vw}
     <div class="k ok"><span>Liberados</span><b id="k-lib">0</b><small id="k-lib-d"></small></div>
     <div class="k"><span>Descargas feitas</span><b id="k-desc">0</b><small id="k-desc-d"></small></div>
     <div class="k"><span>No pátio agora</span><b id="k-pat">0</b><small id="k-pat-d"></small></div>
-    <div class="k nf"><span>Média carregou → liberou</span><b id="k-med">–</b><small id="k-med-d"></small></div>
+    <div class="k nf"><span>Tempo médio da NF-e</span><b id="k-med">–</b><small id="k-med-d"></small></div>
     <div class="k emp"><span>Liberados por empresa</span><div id="k-emp"></div></div>
   </section>
 
@@ -154,6 +187,7 @@ footer .leg{display:flex;flex-wrap:wrap;gap:.6vh 1.4vw}
     <span class="lg"><span class="dot" style="background:var(--orange)"></span>Carregando / descarregando</span>
     <span class="lg"><span class="dot" style="background:var(--blue)"></span>Aguardando NF-e (tempo desde o fim do carregamento)</span>
     <span class="lg"><span class="dot" style="background:var(--red)"></span>Sem ordem</span>
+    <span class="lg"><svg style="width:1.8vh;height:1.8vh;color:var(--muted)" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.6" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 4.2V8l2.6 1.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>Data e hora de chegada</span>
   </div>
   </footer>
 </div>
@@ -165,6 +199,8 @@ const q=new URLSearchParams(location.search), TV=q.get("tv")||"", DEMO=q.has("de
 const TZOFF=-4*3600e3, F=ms=>{const d=new Date(ms+TZOFF);return d;};
 const two=n=>String(n).padStart(2,"0");
 const hm=ms=>{const d=F(ms);return two(d.getUTCHours())+":"+two(d.getUTCMinutes());};
+const ICO_REL='<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.6" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 4.2V8l2.6 1.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
+const dmy=ms=>{const d=F(ms);return two(d.getUTCDate())+"/"+two(d.getUTCMonth()+1);};
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const $=s=>document.querySelector(s);
 const isCarga=f=>String(f||"").startsWith("CARREG");
@@ -177,14 +213,16 @@ const ABERTOS=["PATIO","SEM ORDEM","CARREGANDO","DESCARREGANDO","AGUARDANDO NFE"
 function demo(){
   const now=Date.now(), h=x=>now-x*3600e3, S=(p,m,e,st,c)=>({placa:p,motorista:m,finalidade:"CARREGAR SOJA",empresa:e,status:st,chegada:h(c)});
   return [
-    S("ABC1D23","PEDRO EXEMPLO","COFCO INTERNACIONAL","PATIO",9), S("BCD2E34","ROBERTO EXEMPLO","COFCO INTERNACIONAL","PATIO",8.5),
+    S("ABC1D23","PEDRO EXEMPLO","COFCO INTERNACIONAL","PATIO",30), S("BCD2E34","ROBERTO EXEMPLO","COFCO INTERNACIONAL","PATIO",8.5),
     S("CDE3F45","MARIA EXEMPLO","COFCO INTERNACIONAL","PATIO",8), S("DEF4G56","CARLOS EXEMPLO","BUNGE ALIMENTOS","PATIO",7.5),
     S("EFG5H67","ANTONIO EXEMPLO","BUNGE ALIMENTOS","PATIO",7), S("FGH6I78","DIEGO EXEMPLO","BUNGE ALIMENTOS","PATIO",6.5),
-    S("GHI7J89","WILSON EXEMPLO","COFCO INTERNACIONAL","PATIO",6), S("HIJ8K90","LUIZ EXEMPLO","LDC","CARREGANDO",3),
+    S("GHI7J89","WILSON EXEMPLO","COFCO INTERNACIONAL","PATIO",6),S("XA11B22","RENATO EXEMPLO","COFCO INTERNACIONAL","PATIO",5.5),S("XB22C33","VITOR EXEMPLO","BUNGE ALIMENTOS","PATIO",5),S("XC33D44","ARTUR EXEMPLO","LDC","PATIO",4.5),S("XD44E55","HUGO EXEMPLO","COFCO INTERNACIONAL","PATIO",4), S("HIJ8K90","LUIZ EXEMPLO","LDC","CARREGANDO",3),
     {placa:"IJK9L01",motorista:"JORGE EXEMPLO",finalidade:"CARREGAR MILHO",empresa:"FS",status:"PATIO",chegada:h(2)},
     {placa:"JKL0M12",motorista:"EDSON EXEMPLO",finalidade:"CARREGAR MILHO",empresa:"LDC",status:"PATIO",chegada:h(1.5)},
     {placa:"KLM1N23",motorista:"FABIO EXEMPLO",finalidade:"CARREGAR MILHO",empresa:"FS",status:"CARREGANDO",chegada:h(3)},
     {placa:"LMN2O34",motorista:"JOSE EXEMPLO",finalidade:"CARREGAR SOJA",empresa:"COFCO INTERNACIONAL",status:"AGUARDANDO NFE",chegada:h(10),nfe:h(1)},
+    {placa:"QRA1B22",motorista:"PAULO EXEMPLO",finalidade:"CARREGAR MILHO",empresa:"LDC",status:"AGUARDANDO NFE",chegada:h(20),nfe:h(15.2)},
+    {placa:"QRB2C33",motorista:"SERGIO EXEMPLO",finalidade:"CARREGAR SOJA",empresa:"BUNGE ALIMENTOS",status:"AGUARDANDO NFE",chegada:h(9),nfe:h(5.3)},
     {placa:"MNO3P45",motorista:"MARCIO EXEMPLO",finalidade:"DESCARREGAR 20.00.20",empresa:"MOSAIC FERTILIZANTES",status:"DESCARREGANDO",chegada:h(2)},
     ...[["NOP4Q56","COFCO INTERNACIONAL","SOJA",5,3.6],["OPQ5R67","COFCO INTERNACIONAL","SOJA",4.5,3],["PQR6S78","BUNGE ALIMENTOS","SOJA",4,2.2],["QRS7T89","LDC","MILHO",3.5,2.4],
         ["RST8U90","COFCO INTERNACIONAL","SOJA",3,1.5],["STU9V01","BUNGE ALIMENTOS","SOJA",2.5,1.2],["TUV0W12","FS","MILHO",2,.6],["UVW1X23","COFCO INTERNACIONAL","SOJA",1.5,.3]]
@@ -196,10 +234,13 @@ function demo(){
 
 let regs=[], page=0;
 function espera(ms){ const m=Math.max(0,Math.round((Date.now()-ms)/60e3)); return m<60?m+" min":Math.floor(m/60)+"h"+two(m%60); }
+// cor do tempo de espera da nota: amarelo a partir de 4 h, vermelho a partir de 12 h
+const ALERTA_H=4, ATRASO_H=12;
+const nivel=ms=>{ const h=(Date.now()-ms)/3600e3; return h>=ATRASO_H?"late":h>=ALERTA_H?"warn":""; };
 function rowDoc(d,i){
   // tempo contado a partir de quando foi marcado "Aguardando NF-e" (fim do carregamento)
-  const info=[produto(d.finalidade), d.empresa].filter(Boolean).join(" · ");
-  return `<div class="row r3"><div class="pos nf">${i}º</div>${placa(d.placa)}<div class="who"><b>${esc(nome1(d.motorista))}</b><span>${d.nfe?`<em class="wt">⏱ ${espera(d.nfe)}</em> · `:""}${esc(info)}</span></div></div>`;
+  const info=[produto(d.finalidade), d.empresa?curto(d.empresa):""].filter(Boolean).join(" · ");
+  return `<div class="row r3"><div class="pos nf">${i}º</div>${placa(d.placa)}<div class="who"><b>${esc(nome1(d.motorista))}</b><span>${d.nfe?`<em class="wt ${nivel(d.nfe)}">⏱ ${espera(d.nfe)}</em> · `:""}${esc(info)}</span></div></div>`;
 }
 function rowHtml(d,pos){
   const s=d.status; let p, st;
@@ -208,9 +249,12 @@ function rowHtml(d,pos){
   else if(s==="AGUARDANDO NFE"){ p=`<div class="pos nf">NOTA</div>`; st=`<span class="st NF">AGUARDANDO NOTA</span>`; }
   else if(s==="NOTA PRONTA"){ p=`<div class="pos ok">OK</div>`; st=`<span class="st OK">NOTA PRONTA</span>`; }
   else { p=`<div class="pos so">!</div>`; st=`<span class="st SO">SEM ORDEM</span>`; }
-  const info=(isCarga(d.finalidade)&&produto(d.finalidade)==="SOJA"||produto(d.finalidade)==="MILHO") ? (d.empresa||`chegou ${hm(d.chegada)}`) : [produto(d.finalidade), d.empresa].filter(Boolean).join(" · ");
-  const tag="";
-  return `<div class="row r3">${p}${placa(d.placa)}<div class="who"><b>${esc(nome1(d.motorista))}</b>${tag}<span>${esc(info)}</span></div></div>`;
+  const info=d.empresa?curto(d.empresa):"";
+  // data e hora de chegada, no mesmo padrão em todas as linhas
+  const velho=d.chegada&&d.chegada<inicioDia()&&d.status==="PATIO";
+  const cheg=d.chegada?`<span class="cheg${velho?" old":""}" title="Chegada">${ICO_REL}${dmy(d.chegada)} ${hm(d.chegada)}</span>`:`<span class="cheg sem">${ICO_REL}sem horário de chegada</span>`;
+  // linha 1: NOME + chegada (alinhada à direita) · linha 2: empresa
+  return `<div class="row r3">${p}${placa(d.placa)}<div class="who"><div class="l1"><b>${esc(nome1(d.motorista))}</b>${cheg}</div>${info?`<span>${esc(info)}</span>`:""}</div></div>`;
 }
 const ORDEM={"NOTA PRONTA":0,"AGUARDANDO NFE":1,"CARREGANDO":2,"DESCARREGANDO":2,"PATIO":3,"SEM ORDEM":4};
 function lista(el, nEl, docs, semTitulo){
@@ -225,7 +269,7 @@ function lista(el, nEl, docs, semTitulo){
   nEl.dataset.base=docs.length?`${docs.length}`:"";
   // total por empresa no topo da coluna
   const tEl=document.getElementById("t-"+nEl.id.slice(2));
-  if(tEl){ const em=new Map(); docs.forEach(d=>{ const e=(d.empresa||"SEM EMPRESA").replace(/\s+(INTERNACIONAL|ALIMENTOS|BRASIL|S\.?A\.?|LTDA)\b.*$/,""); em.set(e,(em.get(e)||0)+1); });
+  if(tEl){ const em=new Map(); docs.forEach(d=>{ const e=(d.empresa||"SEM EMPRESA").replace(/\s+(INTERNACIONAL|ALIMENTOS|BRASIL|FERTILIZANTES|INDUSTRIA|INDÚSTRIA|AGRICOLA|AGRISCIENCE|COMPANY|S\.?A\.?|S\/A|LTDA)\b.*$/,""); em.set(e,(em.get(e)||0)+1); });
     tEl.innerHTML=[...em.entries()].sort((a,b)=>b[1]-a[1]).map(([e,n])=>`<span>${esc(e)}<b>${n}</b></span>`).join(""); }
   return linhas;
 }
@@ -241,7 +285,7 @@ function paginar(el, linhas){
 let pagesC=[[]], pagesM=[[]], pagesD=[[]], pagesN=[[]];
 // início do dia no horário da fazenda (UTC-4)
 const inicioDia=()=>{ const d=F(Date.now()); return Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate())-TZOFF; };
-const curto=e=>(e||"SEM EMPRESA").replace(/\s+(INTERNACIONAL|ALIMENTOS|BRASIL|S\.?A\.?|LTDA)\b.*$/,"");
+const curto=e=>(e||"SEM EMPRESA").replace(/\s+(INTERNACIONAL|ALIMENTOS|BRASIL|FERTILIZANTES|INDUSTRIA|INDÚSTRIA|AGRICOLA|AGRISCIENCE|COMPANY|S\.?A\.?|S\/A|LTDA)\b.*$/,"");
 function resumoDia(){
   const h0=inicioDia(), carga=regs.filter(d=>isCarga(d.finalidade));
   const carr=carga.filter(d=>d.nfe&&d.nfe>=h0);
@@ -255,7 +299,7 @@ function resumoDia(){
   const nf=pat.filter(d=>d.status==="AGUARDANDO NFE").length, dentro=pat.filter(d=>/CARREGANDO|DESCARREGANDO/.test(d.status)).length;
   $("#k-pat").textContent=pat.length; $("#k-pat-d").textContent=`${pat.length-nf-dentro} na fila · ${dentro} dentro · ${nf} NF-e`;
   const ts=lib.filter(d=>d.nfe&&d.saida>d.nfe).map(d=>d.saida-d.nfe);
-  if(ts.length){ const m=Math.round(ts.reduce((a,b)=>a+b,0)/ts.length/60e3); $("#k-med").textContent=m<60?m+" min":Math.floor(m/60)+"h"+two(m%60); $("#k-med-d").textContent=`espera da NF-e · ${ts.length} caminh${ts.length>1?"ões":"ão"}`; }
+  if(ts.length){ const m=Math.round(ts.reduce((a,b)=>a+b,0)/ts.length/60e3); $("#k-med").textContent=m<60?m+" min":Math.floor(m/60)+"h"+two(m%60); $("#k-med-d").textContent=(ts.length>1?`média dos ${ts.length} liberados hoje`:"média de 1 liberado hoje"); }
   else { $("#k-med").textContent="–"; $("#k-med-d").textContent="sem liberações hoje"; }
   const em=new Map(); lib.forEach(d=>{const e=curto(d.empresa); em.set(e,(em.get(e)||0)+1);});
   $("#k-emp").innerHTML=[...em.entries()].sort((a,b)=>b[1]-a[1]).map(([e,n])=>`<i>${esc(e)}<em>${n}</em></i>`).join("")||`<small>nenhum ainda</small>`;
@@ -282,13 +326,15 @@ function render(){
   showPage();
 }
 // diminui a letra do selo só o necessário para a palavra caber inteira
+// largura real do texto (para sobrar uma folga dos lados)
+const txtW=e=>{ const r=document.createRange(); r.selectNodeContents(e); return r.getBoundingClientRect().width; };
 function caber(){
-  document.querySelectorAll(".pos.in").forEach(e=>{ let f=parseFloat(getComputedStyle(e).fontSize); while(e.scrollWidth>e.clientWidth+1 && f>7){ f-=.5; e.style.fontSize=f+"px"; } });
+  document.querySelectorAll(".pos.in").forEach(e=>{ let f=parseFloat(getComputedStyle(e).fontSize); while(txtW(e)>e.clientWidth-3 && f>7){ f-=.5; e.style.fontSize=f+"px"; } });
   // placas: todas com o mesmo tamanho de letra (a menor que couber em todas)
   [".row .placa b",".chip .placa b"].forEach(sel=>{
     const ps=[...document.querySelectorAll(sel)]; ps.forEach(e=>e.style.fontSize="");
     if(ps.length){ let f=parseFloat(getComputedStyle(ps[0]).fontSize);
-      while(ps.some(e=>e.scrollWidth>e.clientWidth+1) && f>8){ f-=.5; ps.forEach(e=>e.style.fontSize=f+"px"); } }
+      while(ps.some(e=>txtW(e)>e.clientWidth-7) && f>8){ f-=.5; ps.forEach(e=>e.style.fontSize=f+"px"); } }
   });
 }
 function showPage(){
@@ -298,15 +344,20 @@ function showPage(){
   });
   caber();
 }
+let ultAtu=0;
+function marcarAtu(){ ultAtu=Date.now(); verAtu(); }
+function verAtu(){ const e=$("#atu"); if(!ultAtu) return; const d=F(ultAtu), parado=Date.now()-ultAtu>60e3;
+  e.textContent=(parado?"sem atualizar desde ":"● atualizado às ")+two(d.getUTCHours())+":"+two(d.getUTCMinutes())+":"+two(d.getUTCSeconds()); e.classList.toggle("parado",parado); }
+setInterval(verAtu,5000);
 function relogio(){ const d=F(Date.now()); $("#hora").textContent=two(d.getUTCHours())+":"+two(d.getUTCMinutes());
   const dias=["DOMINGO","SEGUNDA","TERÇA","QUARTA","QUINTA","SEXTA","SÁBADO"]; $("#data").textContent=`${dias[d.getUTCDay()]} · ${two(d.getUTCDate())}/${two(d.getUTCMonth()+1)}`; }
 async function load(){
-  if(DEMO){ regs=demo(); render(); return; }
+  if(DEMO){ regs=demo(); render(); marcarAtu(); return; }
   try{
     const ctl=new AbortController(); const t=setTimeout(()=>ctl.abort(),20000);
     const r=await fetch(API+"?tv="+encodeURIComponent(TV)+"&_="+Date.now(),{signal:ctl.signal}); clearTimeout(t);
     const j=await r.json(); if(!j.ok) throw j;
-    regs=j.registros||[]; $("#off").hidden=true; render();
+    regs=j.registros||[]; $("#off").hidden=true; render(); marcarAtu();
   }catch(e){ $("#off").hidden=false; $("#off").textContent=(e&&e.erro==="codigo")?"Código da TV errado — confira o link":"Sem conexão — mostrando a última atualização"; }
 }
 relogio(); setInterval(relogio,10000);
