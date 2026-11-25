@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="robots" content="noindex">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Guarita Batovi — Painel dos Motoristas</title>
+<title>Movimento do Pátio — Guarita Batovi</title>
 <link rel="icon" href="favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Barlow:wght@500;600;700&display=swap">
@@ -17,7 +17,7 @@
 *{box-sizing:border-box}
 html,body{height:100%}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--fb);overflow:hidden;font-size:1.6vh}
-.wrap{height:100vh;display:grid;grid-template-rows:auto auto 1fr auto auto;gap:1.4vh;padding:1.6vh 1.6vw}
+.wrap{height:100vh;display:grid;grid-template-rows:auto auto auto 1fr auto;gap:1.4vh;padding:1.6vh 1.6vw}
 header{display:flex;align-items:center;gap:1.4vw}
 header img{height:6vh;background:#fff;border-radius:.8vh;padding:.5vh .8vh}
 header h1{font-family:var(--fd);font-weight:800;font-size:4.6vh;letter-spacing:.02em;margin:0;line-height:1}
@@ -27,6 +27,17 @@ header p{margin:.3vh 0 0;color:var(--muted);font-size:2vh}
 .clock span{color:var(--muted);font-size:2vh}
 
 /* faixas de chamada */
+.hoje{display:flex;gap:1vw;align-items:stretch}
+.hoje .k-tit{writing-mode:vertical-rl;transform:rotate(180deg);font-family:var(--fd);font-weight:800;font-size:2vh;letter-spacing:.2em;color:var(--muted);text-align:center;background:var(--panel);border:1px solid var(--line);border-radius:1vh;padding:.6vh}
+.hoje .k{background:var(--panel);border:1px solid var(--line);border-radius:1.2vh;padding:.8vh 1vw;display:flex;flex-direction:column;justify-content:center;min-width:0}
+.hoje .k span{color:var(--muted);font-size:1.6vh;font-weight:700;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}
+.hoje .k b{font-family:var(--fd);font-weight:800;font-size:4.6vh;line-height:1;font-variant-numeric:tabular-nums}
+.hoje .k small{color:var(--muted);font-size:1.55vh;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hoje .k.ok b{color:var(--green)} .hoje .k.nf b{color:#9CCBFF}
+.hoje .k.emp{flex:1}
+#k-emp{display:flex;flex-wrap:wrap;gap:.5vh .4vw;margin-top:.5vh}
+#k-emp i{font-style:normal;display:inline-flex;align-items:center;gap:.4vw;background:#262E21;border:1px solid var(--line);border-radius:99px;padding:.2vh .25vh .2vh .7vw;font-family:var(--fd);font-weight:700;font-size:1.7vh}
+#k-emp i em{font-style:normal;background:var(--green);color:#06210F;border-radius:99px;min-width:2.8vh;height:2.5vh;display:grid;place-items:center;font-size:1.7vh;padding:0 .4vh}
 .calls{display:flex;gap:1.4vw}
 .calls .call{flex:1;min-width:0}
 .calls[hidden],.call[hidden]{display:none!important}
@@ -110,12 +121,21 @@ footer .leg{display:flex;flex-wrap:wrap;gap:.6vh 1.4vw}
 <div class="wrap">
   <header>
     <img src="logo-batovi.png" alt="Sementes Batovi">
-    <div><h1>ACOMPANHE SUA POSIÇÃO</h1><p>Guarita Fazenda Batovi · fila de carregamento e descarga</p></div>
+    <div><h1>MOVIMENTO DO PÁTIO</h1><p>Guarita Fazenda Batovi</p></div>
     <div class="clock"><b id="hora">--:--</b><span id="data"></span></div>
   </header>
 
+  <section class="hoje" id="hoje">
+    <div class="k-tit">HOJE</div>
+    <div class="k"><span>Carregados</span><b id="k-carr">0</b><small id="k-carr-d"></small></div>
+    <div class="k ok"><span>Liberados</span><b id="k-lib">0</b><small id="k-lib-d"></small></div>
+    <div class="k"><span>Descargas feitas</span><b id="k-desc">0</b><small id="k-desc-d"></small></div>
+    <div class="k"><span>No pátio agora</span><b id="k-pat">0</b><small id="k-pat-d"></small></div>
+    <div class="k nf"><span>Média carregou → liberou</span><b id="k-med">–</b><small id="k-med-d"></small></div>
+    <div class="k emp"><span>Liberados por empresa</span><div id="k-emp"></div></div>
+  </section>
+
   <section class="calls">
-    <div class="call ok" id="c-ok"><h2>LIBERADO<small>Retire sua nota e boa viagem</small></h2><div class="chips" id="ok-chips"></div></div>
     <div class="call so" id="c-so"><h2>SEM ORDEM<small>Procure a transportadora</small></h2><div class="chips" id="so-chips"></div></div>
   </section>
 
@@ -131,14 +151,9 @@ footer .leg{display:flex;flex-wrap:wrap;gap:.6vh 1.4vw}
     <span class="lg"><span class="dot" style="background:var(--yellow)"></span>Aguardando (posição na fila)</span>
     <span class="lg"><span class="dot" style="background:var(--orange)"></span>Carregando / descarregando</span>
     <span class="lg"><span class="dot" style="background:var(--blue)"></span>Aguardando NF-e (tempo desde o fim do carregamento)</span>
-    <span class="lg"><span class="dot" style="background:var(--green)"></span>Liberado</span>
     <span class="lg"><span class="dot" style="background:var(--red)"></span>Sem ordem</span>
   </div>
   </footer>
-  <div class="ticker" aria-label="Aviso aos motoristas">
-    <div class="tag">⚠ ATENÇÃO, MOTORISTAS</div>
-    <div class="run"><div>A SEMENTES BATOVI MANTÉM ASSISTÊNCIA NA ESTRADA <b>SOMENTE PELA BR-070</b><i>•</i>NÃO NOS RESPONSABILIZAMOS POR <b>ROTAS SECUNDÁRIAS</b><i>•</i>SIGA SOMENTE PELA BR-070<i>•</i>A SEMENTES BATOVI MANTÉM ASSISTÊNCIA NA ESTRADA <b>SOMENTE PELA BR-070</b><i>•</i>NÃO NOS RESPONSABILIZAMOS POR <b>ROTAS SECUNDÁRIAS</b></div></div>
-  </div>
 </div>
 <div class="off" id="off" hidden>Sem conexão — mostrando a última atualização</div>
 <script>
@@ -168,7 +183,12 @@ function demo(){
     {placa:"JKL0M12",motorista:"EDSON EXEMPLO",finalidade:"CARREGAR MILHO",empresa:"LDC",status:"PATIO",chegada:h(1.5)},
     {placa:"KLM1N23",motorista:"FABIO EXEMPLO",finalidade:"CARREGAR MILHO",empresa:"FS",status:"CARREGANDO",chegada:h(3)},
     {placa:"LMN2O34",motorista:"JOSE EXEMPLO",finalidade:"CARREGAR SOJA",empresa:"COFCO INTERNACIONAL",status:"AGUARDANDO NFE",chegada:h(10),nfe:h(1)},
-    {placa:"MNO3P45",motorista:"MARCIO EXEMPLO",finalidade:"DESCARREGAR 20.00.20",empresa:"MOSAIC FERTILIZANTES",status:"DESCARREGANDO",chegada:h(2)}
+    {placa:"MNO3P45",motorista:"MARCIO EXEMPLO",finalidade:"DESCARREGAR 20.00.20",empresa:"MOSAIC FERTILIZANTES",status:"DESCARREGANDO",chegada:h(2)},
+    ...[["NOP4Q56","COFCO INTERNACIONAL","SOJA",5,3.6],["OPQ5R67","COFCO INTERNACIONAL","SOJA",4.5,3],["PQR6S78","BUNGE ALIMENTOS","SOJA",4,2.2],["QRS7T89","LDC","MILHO",3.5,2.4],
+        ["RST8U90","COFCO INTERNACIONAL","SOJA",3,1.5],["STU9V01","BUNGE ALIMENTOS","SOJA",2.5,1.2],["TUV0W12","FS","MILHO",2,.6],["UVW1X23","COFCO INTERNACIONAL","SOJA",1.5,.3]]
+      .map(([p,e,pr,nf,sa])=>({placa:p,motorista:"EXEMPLO",finalidade:"CARREGAR "+pr,empresa:e,status:"LIBERADO",chegada:h(nf+3),nfe:h(nf),saida:h(sa)})),
+    {placa:"VWX2Y34",motorista:"EXEMPLO",finalidade:"DESCARREGAR UREIA",empresa:"YARA",status:"LIBERADO",chegada:h(4),saida:h(2.5)},
+    {placa:"WXY3Z45",motorista:"EXEMPLO",finalidade:"DESCARREGAR PEDRA",empresa:"",status:"LIBERADO",chegada:h(3),saida:h(1.8)}
   ];
 }
 
@@ -217,17 +237,37 @@ function paginar(el, linhas){
   return pages;
 }
 let pagesC=[[]], pagesM=[[]], pagesD=[[]], pagesN=[[]];
+// início do dia no horário da fazenda (UTC-4)
+const inicioDia=()=>{ const d=F(Date.now()); return Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate())-TZOFF; };
+const curto=e=>(e||"SEM EMPRESA").replace(/\s+(INTERNACIONAL|ALIMENTOS|BRASIL|S\.?A\.?|LTDA)\b.*$/,"");
+function resumoDia(){
+  const h0=inicioDia(), carga=regs.filter(d=>isCarga(d.finalidade));
+  const carr=carga.filter(d=>d.nfe&&d.nfe>=h0);
+  const lib=carga.filter(d=>["LIBERADO","FOI EMBORA"].includes(d.status)&&d.saida&&d.saida>=h0);
+  const desc=regs.filter(d=>!isCarga(d.finalidade)&&d.saida&&d.saida>=h0&&["LIBERADO","FOI EMBORA"].includes(d.status));
+  const pat=regs.filter(d=>ABERTOS.includes(d.status));
+  const porProd=arr=>{ const m=new Map(); arr.forEach(d=>{const p=produto(d.finalidade); m.set(p,(m.get(p)||0)+1);}); return [...m.entries()].sort((a,b)=>b[1]-a[1]).map(([p,n])=>`${p} ${n}`).join(" · "); };
+  $("#k-carr").textContent=carr.length; $("#k-carr-d").textContent=porProd(carr)||"nenhum ainda";
+  $("#k-lib").textContent=lib.length; $("#k-lib-d").textContent=porProd(lib)||"nenhum ainda";
+  $("#k-desc").textContent=desc.length; $("#k-desc-d").textContent=porProd(desc)||"nenhuma ainda";
+  const nf=pat.filter(d=>d.status==="AGUARDANDO NFE").length, dentro=pat.filter(d=>/CARREGANDO|DESCARREGANDO/.test(d.status)).length;
+  $("#k-pat").textContent=pat.length; $("#k-pat-d").textContent=`${pat.length-nf-dentro} na fila · ${dentro} dentro · ${nf} NF-e`;
+  const ts=lib.filter(d=>d.nfe&&d.saida>d.nfe).map(d=>d.saida-d.nfe);
+  if(ts.length){ const m=Math.round(ts.reduce((a,b)=>a+b,0)/ts.length/60e3); $("#k-med").textContent=m<60?m+" min":Math.floor(m/60)+"h"+two(m%60); $("#k-med-d").textContent=`espera da NF-e · ${ts.length} caminh${ts.length>1?"ões":"ão"}`; }
+  else { $("#k-med").textContent="–"; $("#k-med-d").textContent="sem liberações hoje"; }
+  const em=new Map(); lib.forEach(d=>{const e=curto(d.empresa); em.set(e,(em.get(e)||0)+1);});
+  $("#k-emp").innerHTML=[...em.entries()].sort((a,b)=>b[1]-a[1]).map(([e,n])=>`<i>${esc(e)}<em>${n}</em></i>`).join("")||`<small>nenhum ainda</small>`;
+}
 function render(){
+  resumoDia();
   const open=regs.filter(d=>ABERTOS.includes(d.status));
   // só carregamentos liberados nos últimos 30 minutos aparecem na faixa verde (descarga não tem nota para retirar)
   const ok=regs.filter(d=>d.status==="LIBERADO"&&isCarga(d.finalidade)&&d.saida&&Date.now()-d.saida<LIB_MIN*60e3).sort((a,b)=>b.saida-a.saida);
   const so=open.filter(d=>d.status==="SEM ORDEM");
-  $("#ok-chips").innerHTML=ok.map(d=>`<span class="chip">${placa(d.placa)}${esc(nome1(d.motorista))}</span>`).join("");
-  $("#c-ok").classList.toggle("vazio",!ok.length); if(!ok.length) $("#ok-chips").innerHTML=`<span style="font-size:2.2vh">Ninguém liberado nos últimos 30 min</span>`;
   $("#so-chips").innerHTML=so.map(d=>`<span class="chip">${placa(d.placa)}${esc(nome1(d.motorista))}</span>`).join("");
   $("#c-so").classList.toggle("vazio",!so.length); if(!so.length) $("#so-chips").innerHTML=`<span style="font-size:2.2vh">Ninguém sem ordem</span>`;
   // as faixas só aparecem quando têm alguém; sem nenhuma, as filas ganham o espaço
-  $("#c-ok").hidden=!ok.length; $("#c-so").hidden=!so.length; $(".calls").hidden=!ok.length&&!so.length;
+  $("#c-so").hidden=!so.length; $(".calls").hidden=!so.length;
   const fila=open.filter(d=>d.status!=="AGUARDANDO NFE");
   const doc=open.filter(d=>d.status==="AGUARDANDO NFE").sort((a,b)=>((a.nfe||9e15)-(b.nfe||9e15))||(a.chegada-b.chegada));
   $("#n-n").dataset.base=doc.length?`${doc.length}`:"";
