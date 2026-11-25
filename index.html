@@ -1026,7 +1026,7 @@ fPlaca.addEventListener("input", ()=>{
     if(!$("#f-emp").value) $("#f-emp").value=empCad(empresaDe(last))||"";
   } else { h.className="hint"; h.textContent="Primeira visita desta placa nos últimos "+S.dias+" dias."; }
   const aberto=S.docs.find(d=>d.placa===p && isOpen(d));
-  if(aberto){ dup.hidden=false; dup.textContent=`${p} já está no pátio desde ${dmhm(aberto.chegada)} (${SLABEL[aberto.status]}). Se for outra viagem, toque de novo em registrar.`; }
+  if(aberto){ dup.hidden=false; dup.textContent=`${p} já está no pátio desde ${dmhm(aberto.chegada)} (${SLABEL[aberto.status]}). Não dá para registrar de novo: se ele já saiu, marque a saída no registro que está no pátio.`; }
 });
 $("#f-fin").addEventListener("change", e=>{ const c=isCarga(e.target.value); $("#f-semordem-l").hidden=!c; if(!c) $("#f-semordem").checked=false; });
 $("#cheg-adj").addEventListener("click", ()=>{
@@ -1047,7 +1047,9 @@ $("#form-nova").addEventListener("submit", async e=>{
   const cheg = S.chegManual ? fromLocalInput($("#f-cheg").value) : Date.now();
   if(!cheg){ toast("Informe o horário de chegada.", true); return; }
   if(cheg>Date.now()+5*60e3){ toast("A chegada não pode ser no futuro.", true); return; }
-  if(S.docs.some(d=>d.placa===p && isOpen(d)) && !S.dupArm){ S.dupArm=true; $("#btn-reg").textContent="Registrar mesmo assim"; return; }
+  // placa que já está no pátio não pode ser registrada de novo
+  const ja=S.docs.find(d=>d.placa===p && isOpen(d));
+  if(ja){ toast(`A placa ${p} já está no pátio (${SLABEL[ja.status]||ja.status}${ja.chegada?", chegou "+dm(ja.chegada)+" "+hm(ja.chegada):""}). Use Editar no registro que já existe.`, true); fPlaca.focus(); return; }
   const btn=$("#btn-reg"); btn.disabled=true; btn.innerHTML='<span class="spin"></span> Salvando na planilha…';
   pendingId = pendingId || newId();   // mesmo id se tentar de novo: não duplica
   try{
