@@ -273,6 +273,9 @@ table.hist td:nth-child(11){width:1%}
 .prt:hover{color:var(--orange);border-color:var(--orange)}
 #ticket{display:none}
 #relat{display:none}
+.imp-st{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;padding-top:4px}
+.imp-st label.inline{display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;line-height:1.2;align-items:center;gap:10px;margin:0!important;font-weight:600;font-size:15px;text-transform:none!important;letter-spacing:0!important;color:inherit;cursor:pointer;padding:8px 10px;border:1px solid rgba(0,0,0,.12);border-radius:10px}
+.imp-st input[type=checkbox]{width:20px!important;height:20px!important;min-height:0!important;padding:0!important;margin:0!important;flex:none;accent-color:#E8620C;appearance:auto!important;-webkit-appearance:checkbox!important;box-shadow:none!important}
 @media print{
   @page{margin:6mm}
   body.imp-rel{background:#fff!important}
@@ -287,6 +290,7 @@ table.hist td:nth-child(11){width:1%}
   #relat .rl-tot{display:flex;flex-wrap:wrap;gap:1.5mm 5mm;font-size:9.5pt;margin-bottom:3mm}
   #relat .rl-tot b{font-size:11pt}
   #relat h2{font-family:"Barlow Condensed",Arial,sans-serif;font-size:13pt;margin:4mm 0 1.2mm;padding:0.8mm 2mm;background:#E6E6E6;border-left:1.6mm solid #000;break-after:avoid}
+  #relat h3{font-family:"Barlow Condensed",Arial,sans-serif;font-size:11pt;margin:2.5mm 0 .8mm;padding-left:2mm;border-left:.8mm solid #777;break-after:avoid}
   #relat table{width:100%;border-collapse:collapse}
   #relat th{font-size:7.5pt;text-transform:uppercase;letter-spacing:.03em;text-align:left;border-bottom:0.4mm solid #000;padding:1mm 1.2mm}
   #relat td{border-bottom:0.2mm solid #999;padding:1.3mm 1.2mm;vertical-align:middle}
@@ -461,6 +465,34 @@ table.hist td:nth-child(11){width:1%}
 </main>
 </div>
 
+<dialog id="dlg-imp">
+  <form class="dlg" id="form-imp" method="dialog" novalidate>
+    <div class="dlg-h"><span>🖨</span><h3>Imprimir pátio</h3><button type="button" class="btn ghost x" id="imp-close" aria-label="Fechar">✕</button></div>
+    <div class="field"><label>Status</label>
+      <div class="imp-st">
+        <label class="inline"><input type="checkbox" id="imp-todos" checked> <b>Todos</b></label>
+        <label class="inline"><input type="checkbox" class="imp-s" value="PATIO" checked> Aguardando entrada</label>
+        <label class="inline"><input type="checkbox" class="imp-s" value="SEM ORDEM" checked> Sem ordem</label>
+        <label class="inline"><input type="checkbox" class="imp-s" value="CARREGANDO" checked> <span>Carregando / descarregando</span></label>
+        <label class="inline"><input type="checkbox" class="imp-s" value="AGUARDANDO NFE" checked> Aguardando NF-e</label>
+      </div>
+    </div>
+    <div class="row2">
+      <div class="field"><label for="imp-tipo">Tipo</label><select id="imp-tipo"><option value="">Carregar e descarregar</option><option value="C">Só carregar</option><option value="D">Só descarregar</option></select></div>
+      <div class="field"><label for="imp-sep">Separar por</label><select id="imp-sep"><option value="PE">Produto e empresa</option><option value="P">Só produto</option><option value="S">Status</option></select></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label for="imp-prod">Produto</label><select id="imp-prod"></select></div>
+      <div class="field"><label for="imp-emp">Empresa</label><select id="imp-emp"></select></div>
+    </div>
+    <div class="banner" id="imp-cont" style="margin-top:4px"></div>
+    <div class="acts">
+      <span style="flex:1"></span>
+      <button type="button" class="btn" id="imp-cancel">Cancelar</button>
+      <button type="submit" class="btn primary" id="imp-go">🖨 Imprimir</button>
+    </div>
+  </form>
+</dialog>
 <dialog id="dlg">
   <form class="dlg" id="form-ed" method="dialog" novalidate>
     <div class="dlg-h"><span id="ed-plate"></span><h3>Editar registro</h3><button type="button" class="btn ghost x" id="ed-close" aria-label="Fechar">✕</button></div>
@@ -945,32 +977,79 @@ function imprimirTicket(d){
 window.addEventListener("afterprint", ()=>document.body.classList.remove("imprimindo","imp-rel"));
 
 /* ---------- impressão do pátio (A4): caminhões para carregar, por produto, em ordem de chegada ---------- */
-function imprimirPatio(){
+// filtros escolhidos no diálogo
+function filtrosImp(){
+  const st=[...document.querySelectorAll(".imp-s:checked")].map(x=>x.value);
+  if(st.includes("CARREGANDO")) st.push("DESCARREGANDO");
+  return { st, tipo:$("#imp-tipo").value, prod:$("#imp-prod").value, emp:$("#imp-emp").value, sep:$("#imp-sep").value };
+}
+function listaImp(f){
+  return S.docs.filter(d=>isOpen(d) && f.st.includes(d.status)
+    && (!f.tipo || (f.tipo==="C")===isCarga(d.finalidade))
+    && (!f.prod || produto(d.finalidade)===f.prod)
+    && (!f.emp || (empresaDe(d)||"SEM EMPRESA")===f.emp));
+}
+function abrirImp(){
+  const abertos=S.docs.filter(isOpen);
+  const opts=(arr,todos,cur)=>`<option value="">${todos}</option>`+[...new Set(arr)].sort().map(x=>`<option ${x===cur?"selected":""}>${esc(x)}</option>`).join("");
+  $("#imp-prod").innerHTML=opts(abertos.map(d=>produto(d.finalidade)),"Todos os produtos",$("#imp-prod").value);
+  $("#imp-emp").innerHTML=opts(abertos.map(d=>empresaDe(d)||"SEM EMPRESA"),"Todas as empresas",$("#imp-emp").value);
+  contarImp();
+  const dl=$("#dlg-imp"); if(dl.showModal) dl.showModal(); else dl.setAttribute("open","");
+}
+function contarImp(){
+  const n=listaImp(filtrosImp()).length;
+  $("#imp-cont").textContent = n ? `${n} veículo${n>1?"s":""} vão sair na folha.` : "Nenhum veículo com esses filtros.";
+  $("#imp-go").disabled=!n;
+}
+function fecharImp(){ const dl=$("#dlg-imp"); if(dl.close) dl.close(); else dl.removeAttribute("open"); }
+function imprimirPatio(f){
+  f=f||{st:["PATIO","SEM ORDEM","CARREGANDO","DESCARREGANDO","AGUARDANDO NFE"],tipo:"",prod:"",emp:"",sep:"PE"};
   const ORD={"PATIO":0,"SEM ORDEM":1,"CARREGANDO":2,"DESCARREGANDO":2,"AGUARDANDO NFE":3};
-  const lista=S.docs.filter(d=>isOpen(d));
   const nomeG=d=>(isCarga(d.finalidade)?"CARREGAR ":"DESCARREGAR ")+produto(d.finalidade);
-  const grupos=new Map(); lista.forEach(d=>{ const g=nomeG(d); if(!grupos.has(g)) grupos.set(g,[]); grupos.get(g).push(d); });
   const ordemG=g=>g==="CARREGAR SOJA"?0:g==="CARREGAR MILHO"?1:g.startsWith("CARREGAR")?2:3;
+  // posição na fila calculada com o pátio inteiro (não muda por causa do filtro)
+  const posFila=new Map(), cont=new Map();
+  S.docs.filter(d=>isOpen(d)&&d.status==="PATIO").sort((a,b)=>(a.chegada||0)-(b.chegada||0)).forEach(d=>{ const g=nomeG(d); cont.set(g,(cont.get(g)||0)+1); posFila.set(d.id,cont.get(g)); });
+  const lista=listaImp(f);
   const tot=(arr,fn)=>{ const m=new Map(); arr.forEach(d=>{const k=fn(d)||"SEM EMPRESA"; m.set(k,(m.get(k)||0)+1);}); return [...m.entries()].sort((a,b)=>b[1]-a[1]).map(([k,n])=>`${esc(k)} <b>${n}</b>`).join(" · "); };
   const espera=d=>d.chegada?dur(Date.now()-d.chegada)+" h":"–";
-  const secoes=[...grupos.entries()].sort((a,b)=>ordemG(a[0])-ordemG(b[0])||b[1].length-a[1].length).map(([g,arr])=>{
-    arr.sort((a,b)=>((ORD[a.status]??9)-(ORD[b.status]??9))||((a.chegada||0)-(b.chegada||0)));
-    let pos=0;
-    const linhas=arr.map(d=>`<tr><td class="n">${d.status==="PATIO"?(++pos)+"º":"–"}</td><td class="pl">${esc(d.placa)}</td><td>${esc(d.motorista||"")}</td><td>${esc(d.transportadora||"")}</td><td>${esc(empresaDe(d))}</td><td style="white-space:nowrap">${esc(dataHora(d.chegada))}</td><td style="white-space:nowrap">${espera(d)}</td><td class="st">${esc(SLABEL[d.status]||d.status)}</td><td class="ck"><span></span></td></tr>`).join("");
-    return `<h2>${esc(g)} — ${arr.length} veículo${arr.length>1?"s":""}${arr.some(d=>empresaDe(d))?` <small style="font-weight:600;font-size:9.5pt">(${tot(arr,empresaDe)})</small>`:""}</h2>
-      <table><thead><tr><th>Fila</th><th>Placa</th><th>Motorista</th><th>Transportadora</th><th>Empresa</th><th>Chegada</th><th>Espera</th><th>Status</th><th>OK</th></tr></thead><tbody>${linhas}</tbody></table>`;
-  }).join("");
+  const ordenar=arr=>arr.sort((a,b)=>((ORD[a.status]??9)-(ORD[b.status]??9))||((a.chegada||0)-(b.chegada||0)));
+  const tabela=arr=>`<table><thead><tr><th>Fila</th><th>Placa</th><th>Motorista</th><th>Transportadora</th><th>Empresa</th><th>Chegada</th><th>Espera</th><th>Status</th><th>OK</th></tr></thead><tbody>${
+    ordenar(arr).map(d=>`<tr><td class="n">${d.status==="PATIO"&&posFila.get(d.id)?posFila.get(d.id)+"º":"–"}</td><td class="pl">${esc(d.placa)}</td><td>${esc(d.motorista||"")}</td><td>${esc(d.transportadora||"")}</td><td>${esc(empresaDe(d))}</td><td style="white-space:nowrap">${esc(dataHora(d.chegada))}</td><td style="white-space:nowrap">${espera(d)}</td><td class="st">${esc(SLABEL[d.status]||d.status)}</td><td class="ck"><span></span></td></tr>`).join("")}</tbody></table>`;
+  const agrupar=(arr,fn)=>{ const m=new Map(); arr.forEach(d=>{ const k=fn(d); if(!m.has(k)) m.set(k,[]); m.get(k).push(d); }); return m; };
+  const nv=n=>`${n} veículo${n>1?"s":""}`;
+  let secoes="";
+  if(f.sep==="S"){
+    const ordS=["PATIO","SEM ORDEM","CARREGANDO","DESCARREGANDO","AGUARDANDO NFE"];
+    secoes=[...agrupar(lista,d=>d.status).entries()].sort((a,b)=>ordS.indexOf(a[0])-ordS.indexOf(b[0])).map(([s,arr])=>
+      `<h2>${esc((SLABEL[s]||s).toUpperCase())} — ${nv(arr.length)}</h2>`+
+      [...agrupar(arr,nomeG).entries()].sort((a,b)=>ordemG(a[0])-ordemG(b[0])).map(([g,a2])=>`<h3>${esc(g)} — ${nv(a2.length)}</h3>${tabela(a2)}`).join("")).join("");
+  } else {
+    secoes=[...agrupar(lista,nomeG).entries()].sort((a,b)=>ordemG(a[0])-ordemG(b[0])||b[1].length-a[1].length).map(([g,arr])=>{
+      const cab=`<h2>${esc(g)} — ${nv(arr.length)}${arr.some(d=>empresaDe(d))?` <small style="font-weight:600;font-size:9.5pt">(${tot(arr,empresaDe)})</small>`:""}</h2>`;
+      if(f.sep==="P") return cab+tabela(arr);
+      return cab+[...agrupar(arr,d=>empresaDe(d)||"SEM EMPRESA").entries()].sort((a,b)=>b[1].length-a[1].length||a[0].localeCompare(b[0])).map(([e,a2])=>`<h3>${esc(e)} — ${nv(a2.length)}</h3>${tabela(a2)}`).join("");
+    }).join("");
+  }
+  const filtroTxt=[f.st.length<5?"Status: "+[...new Set(f.st.map(s=>s==="DESCARREGANDO"?"CARREGANDO":s))].map(s=>s==="CARREGANDO"?"Carregando/descarregando":SLABEL[s]).join(", "):"",
+    f.tipo==="C"?"Só carregar":f.tipo==="D"?"Só descarregar":"", f.prod?"Produto: "+f.prod:"", f.emp?"Empresa: "+f.emp:""].filter(Boolean).join(" · ");
   $("#relat").innerHTML=`
-    <div class="rl-top"><img src="logo-batovi.png" alt=""><div><h1>VEÍCULOS NO PÁTIO</h1><p>Guarita · Fazenda Batovi</p></div>
+    <div class="rl-top"><img src="logo-batovi.png" alt=""><div><h1>VEÍCULOS NO PÁTIO</h1><p>Guarita · Fazenda Batovi${filtroTxt?" · <b>"+esc(filtroTxt)+"</b>":""}</p></div>
       <div class="rl-q">${esc(dataHora(Date.now()))}${S.nome?"<br>"+esc(S.nome):""}</div></div>
     <div class="rl-tot"><span>Total: <b>${lista.length}</b></span><span>Carregar: <b>${lista.filter(d=>isCarga(d.finalidade)).length}</b></span><span>Descarregar: <b>${lista.filter(d=>!isCarga(d.finalidade)).length}</b></span><span>Na fila: <b>${lista.filter(d=>d.status==="PATIO").length}</b></span><span>Carregando/descarregando: <b>${lista.filter(d=>/CARREGANDO/.test(d.status)).length}</b></span><span>Aguardando NF-e: <b>${lista.filter(d=>d.status==="AGUARDANDO NFE").length}</b></span><span>Sem ordem: <b>${lista.filter(d=>d.status==="SEM ORDEM").length}</b></span></div>
-    ${secoes||"<p>Nenhum veículo no pátio agora.</p>"}
+    ${secoes||"<p>Nenhum veículo com esses filtros.</p>"}
     <div class="rl-rod">Fila = posição por ordem de chegada entre os que aguardam · Espera = tempo desde a chegada</div>`;
   document.body.classList.add("imp-rel");
   let feito=false; const go=()=>{ if(feito) return; feito=true; window.print(); };
   const img=$("#relat img"); if(img && !img.complete){ img.onload=go; img.onerror=go; setTimeout(go,1500); } else go();
 }
-$("#btn-imp-patio").addEventListener("click", imprimirPatio);
+$("#btn-imp-patio").addEventListener("click", abrirImp);
+$("#imp-close").addEventListener("click",fecharImp); $("#imp-cancel").addEventListener("click",fecharImp);
+$("#imp-todos").addEventListener("change",e=>{ document.querySelectorAll(".imp-s").forEach(x=>x.checked=e.target.checked); contarImp(); });
+document.querySelectorAll(".imp-s").forEach(x=>x.addEventListener("change",()=>{ const all=[...document.querySelectorAll(".imp-s")]; $("#imp-todos").checked=all.every(y=>y.checked); contarImp(); }));
+["#imp-tipo","#imp-prod","#imp-emp","#imp-sep"].forEach(s=>$(s).addEventListener("change",contarImp));
+$("#form-imp").addEventListener("submit",e=>{ e.preventDefault(); const f=filtrosImp(); fecharImp(); setTimeout(()=>imprimirPatio(f),150); });
 $("#ed-print").addEventListener("click", ()=>imprimirTicket(byId(S.editing)));
 
 /* ---------- gravação ---------- */
