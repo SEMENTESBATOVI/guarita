@@ -480,12 +480,13 @@ table.hist td:nth-child(11){width:1%}
     </div>
     <div class="row2">
       <div class="field"><label for="imp-tipo">Tipo</label><select id="imp-tipo"><option value="">Carregar e descarregar</option><option value="C">Só carregar</option><option value="D">Só descarregar</option></select></div>
-      <div class="field"><label for="imp-sep">Separar por</label><select id="imp-sep"><option value="PE">Produto e empresa</option><option value="P">Só produto</option><option value="S">Status</option></select></div>
+      <div class="field"><label for="imp-sep">Separar por</label><select id="imp-sep"><option value="PE">Produto e empresa</option><option value="P">Só produto</option><option value="T">Transportadora</option><option value="S">Status</option></select></div>
     </div>
     <div class="row2">
       <div class="field"><label for="imp-prod">Produto</label><select id="imp-prod"></select></div>
       <div class="field"><label for="imp-emp">Empresa</label><select id="imp-emp"></select></div>
     </div>
+    <div class="field"><label for="imp-tr">Transportadora</label><select id="imp-tr"></select></div>
     <div class="banner" id="imp-cont" style="margin-top:4px"></div>
     <div class="acts">
       <span style="flex:1"></span>
@@ -982,30 +983,32 @@ window.addEventListener("afterprint", ()=>document.body.classList.remove("imprim
 function filtrosImp(){
   const st=[...document.querySelectorAll(".imp-s:checked")].map(x=>x.value);
   if(st.includes("CARREGANDO")) st.push("DESCARREGANDO");
-  return { st, tipo:$("#imp-tipo").value, prod:$("#imp-prod").value, emp:$("#imp-emp").value, sep:$("#imp-sep").value };
+  return { st, tipo:$("#imp-tipo").value, prod:$("#imp-prod").value, emp:$("#imp-emp").value, tr:$("#imp-tr").value, sep:$("#imp-sep").value };
 }
 function listaImp(f){
   return S.docs.filter(d=>isOpen(d) && f.st.includes(d.status)
     && (!f.tipo || (f.tipo==="C")===isCarga(d.finalidade))
     && (!f.prod || produto(d.finalidade)===f.prod)
-    && (!f.emp || (empresaDe(d)||"SEM EMPRESA")===f.emp));
+    && (!f.emp || (empresaDe(d)||"SEM EMPRESA")===f.emp)
+    && (!f.tr || (d.transportadora||"SEM TRANSPORTADORA")===f.tr));
 }
 function abrirImp(){
   const abertos=S.docs.filter(isOpen);
   const opts=(arr,todos,cur)=>`<option value="">${todos}</option>`+[...new Set(arr)].sort().map(x=>`<option ${x===cur?"selected":""}>${esc(x)}</option>`).join("");
   $("#imp-prod").innerHTML=opts(abertos.map(d=>produto(d.finalidade)),"Todos os produtos",$("#imp-prod").value);
   $("#imp-emp").innerHTML=opts(abertos.map(d=>empresaDe(d)||"SEM EMPRESA"),"Todas as empresas",$("#imp-emp").value);
+  $("#imp-tr").innerHTML=opts(abertos.map(d=>d.transportadora||"SEM TRANSPORTADORA"),"Todas as transportadoras",$("#imp-tr").value);
   contarImp();
   const dl=$("#dlg-imp"); if(dl.showModal) dl.showModal(); else dl.setAttribute("open","");
 }
 function contarImp(){
   const n=listaImp(filtrosImp()).length;
-  $("#imp-cont").textContent = n ? `${n} veículo${n>1?"s":""} vão sair na folha.` : "Nenhum veículo com esses filtros.";
+  $("#imp-cont").textContent = n ? (n>1?`${n} veículos vão sair na folha.`:"1 veículo vai sair na folha.") : "Nenhum veículo com esses filtros.";
   $("#imp-go").disabled=!n;
 }
 function fecharImp(){ const dl=$("#dlg-imp"); if(dl.close) dl.close(); else dl.removeAttribute("open"); }
 function imprimirPatio(f){
-  f=f||{st:["PATIO","SEM ORDEM","CARREGANDO","DESCARREGANDO","AGUARDANDO NFE"],tipo:"",prod:"",emp:"",sep:"PE"};
+  f=f||{st:["PATIO","SEM ORDEM","CARREGANDO","DESCARREGANDO","AGUARDANDO NFE"],tipo:"",prod:"",emp:"",tr:"",sep:"PE"};
   const ORD={"PATIO":0,"SEM ORDEM":1,"CARREGANDO":2,"DESCARREGANDO":2,"AGUARDANDO NFE":3};
   const nomeG=d=>(isCarga(d.finalidade)?"CARREGAR ":"DESCARREGAR ")+produto(d.finalidade);
   const ordemG=g=>g==="CARREGAR SOJA"?0:g==="CARREGAR MILHO"?1:g.startsWith("CARREGAR")?2:3;
@@ -1026,7 +1029,11 @@ function imprimirPatio(f){
   const agrupar=(arr,fn)=>{ const m=new Map(); arr.forEach(d=>{ const k=fn(d); if(!m.has(k)) m.set(k,[]); m.get(k).push(d); }); return m; };
   const nv=n=>`${n} veículo${n>1?"s":""}`;
   let secoes="";
-  if(f.sep==="S"){
+  if(f.sep==="T"){
+    secoes=[...agrupar(lista,d=>d.transportadora||"SEM TRANSPORTADORA").entries()].sort((a,b)=>b[1].length-a[1].length||a[0].localeCompare(b[0])).map(([tr,arr])=>
+      `<h2>${esc(tr)} — ${nv(arr.length)}</h2>`+
+      [...agrupar(arr,nomeG).entries()].sort((a,b)=>ordemG(a[0])-ordemG(b[0])).map(([g,a2])=>`<h3>${esc(g)} — ${nv(a2.length)}</h3>${tabela(a2)}`).join("")).join("");
+  } else if(f.sep==="S"){
     const ordS=["PATIO","SEM ORDEM","CARREGANDO","DESCARREGANDO","AGUARDANDO NFE"];
     secoes=[...agrupar(lista,d=>d.status).entries()].sort((a,b)=>ordS.indexOf(a[0])-ordS.indexOf(b[0])).map(([s,arr])=>
       `<h2>${esc((SLABEL[s]||s).toUpperCase())} — ${nv(arr.length)}</h2>`+
@@ -1039,7 +1046,7 @@ function imprimirPatio(f){
     }).join("");
   }
   const filtroTxt=[f.st.length<5?"Status: "+[...new Set(f.st.map(s=>s==="DESCARREGANDO"?"CARREGANDO":s))].map(s=>s==="CARREGANDO"?"Carregando/descarregando":SLABEL[s]).join(", "):"",
-    f.tipo==="C"?"Só carregar":f.tipo==="D"?"Só descarregar":"", f.prod?"Produto: "+f.prod:"", f.emp?"Empresa: "+f.emp:""].filter(Boolean).join(" · ");
+    f.tipo==="C"?"Só carregar":f.tipo==="D"?"Só descarregar":"", f.prod?"Produto: "+f.prod:"", f.emp?"Empresa: "+f.emp:"", f.tr?"Transportadora: "+f.tr:""].filter(Boolean).join(" · ");
   $("#relat").innerHTML=`
     <div class="rl-top"><img src="logo-batovi.png" alt=""><div><h1>VEÍCULOS NO PÁTIO</h1><p>Guarita · Fazenda Batovi${filtroTxt?" · <b>"+esc(filtroTxt)+"</b>":""}</p></div>
       <div class="rl-q">${esc(dataHora(Date.now()))}${S.nome?"<br>"+esc(S.nome):""}</div></div>
@@ -1054,7 +1061,7 @@ $("#btn-imp-patio").addEventListener("click", abrirImp);
 $("#imp-close").addEventListener("click",fecharImp); $("#imp-cancel").addEventListener("click",fecharImp);
 $("#imp-todos").addEventListener("change",e=>{ document.querySelectorAll(".imp-s").forEach(x=>x.checked=e.target.checked); contarImp(); });
 document.querySelectorAll(".imp-s").forEach(x=>x.addEventListener("change",()=>{ const all=[...document.querySelectorAll(".imp-s")]; $("#imp-todos").checked=all.every(y=>y.checked); contarImp(); }));
-["#imp-tipo","#imp-prod","#imp-emp","#imp-sep"].forEach(s=>$(s).addEventListener("change",contarImp));
+["#imp-tipo","#imp-prod","#imp-emp","#imp-tr","#imp-sep"].forEach(s=>$(s).addEventListener("change",contarImp));
 $("#form-imp").addEventListener("submit",e=>{ e.preventDefault(); const f=filtrosImp(); fecharImp(); setTimeout(()=>imprimirPatio(f),150); });
 $("#ed-print").addEventListener("click", ()=>imprimirTicket(byId(S.editing)));
 
